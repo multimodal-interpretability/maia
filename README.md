@@ -1,7 +1,7 @@
 # A Multimodal Automated Interpretability Agent #
 ### ICML 2024 ###
 
-### [Project Page](https://multimodal-interpretability.csail.mit.edu/maia) | [Arxiv](https://multimodal-interpretability.csail.mit.edu/maia)
+### [Project Page](https://multimodal-interpretability.csail.mit.edu/maia) | [Arxiv](https://multimodal-interpretability.csail.mit.edu/maia) | [Experiment browser](https://multimodal-interpretability.csail.mit.edu/maia/experiment-browser/)
 
 <img align="right" width="42%" src="/docs/static/figures/maia_teaser.jpg">
 
