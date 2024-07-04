@@ -1,0 +1,479 @@
+body, p {
+    font-family: 'Lato', sans-serif;
+    font-weight: 400; /* Regular weight for readability */
+}
+
+#header {
+    text-align: center;
+    margin-bottom: 20px;
+    /* font-family: 'Noto Sans', sans-serif; */
+}
+
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Lato', sans-serif;
+    font-weight: 800; /* For a bold look in titles */
+}
+
+/* Center the layer containers within the networkContainer */
+#networkContainer {
+    text-align: center; /* Center-align inline(-block) children */
+    font-family: 'Lato', sans-serif;
+}
+
+/* Style for the container of each layer */
+.layer-container {
+    display: inline-block; /* Allow the container to fit content width */
+    position: relative; /* For positioning the layer title absolutely */
+    margin: 0px 150px; /* Space around each layer container */
+}
+
+/* Style for the layer title */
+.layer-title {
+    /* Position the layer title to the left of the layer rectangle */
+    position: absolute;
+    top: 50%;
+    left: -3em; /* Adjust as needed depending on the width of the titles */
+    transform: translateY(-50%) rotate(-90deg); /* Rotate the title to be vertical */
+    transform-origin: center;
+    font-size: 0.8em;
+    font-weight: bold;
+    white-space: nowrap;
+    text-align: center; /* Align text right so it ends near the layer */
+    font-family: 'Noto Sans', sans-serif;
+}
+
+/* Style for the rectangle of each layer */
+.layer {
+    background-color: #eee;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 10px;
+    display: inline-block;
+    margin: 0 auto; /* Center the layer within its container */
+    vertical-align: middle; /* Align with the title if it's taller than the rectangle */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+
+
+}
+
+.unit {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    background-color: #78b3db;
+    border-radius: 50%;
+    margin: 0 5px; /* Spacing between dots */
+    position: relative;
+    cursor: pointer;
+}
+
+.unit:hover {
+    background-color: #f4aa3cb7; /* Change to your preferred hover color */
+    /* Other hover styles like the tooltip can remain unchanged */
+}
+
+.unit:hover::after {
+    content: attr(data-label);
+    position: absolute;
+    left: 30%;
+    top: -150%;
+    white-space: nowrap;
+    background-color: #f4aa3cb7;
+    padding: 5px 5px;
+    /* border: 1px solid #575656; */
+    z-index: 1;
+}
+
+.arrow {
+    /* Set a fixed height to ensure the arrows align with the center of the rectangles */
+    height: 1.5em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5em;
+}
+
+.experiment-details {
+    position: absolute;
+    top: 500%;
+    right:100%;
+    left: 100%;
+    border: 2px solid #a7a6a6;
+    border-radius: 20px;
+    padding: 15px;
+    background-color: #ffffff;
+    width:75%;
+    height: 75%;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    /* position: absolute; */
+    top: 10%;
+    left: 10%;
+    right: 10%;
+    overflow-y: auto;
+    max-height: 100vh;
+    max-width: 200vh;
+    z-index: 10;
+    margin: 0 auto;
+}
+
+.experiment-details.hidden {
+    display: none;
+}
+
+.experiment-title {
+    font-size: 1em;
+    margin-bottom: 10px;
+    text-align: left;
+}
+
+.close-button {
+    position: fixed;
+    top: 11%;
+    right: 12%;
+    border: none;
+    background: #ffffffcb;
+    color: #f39f32;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+    font-size: 2em;
+    z-index: 9999; /* High value to ensure it's on top */
+    ;
+}
+
+
+.code-block {
+    /* display: none; */
+    /* display: none; Start hidden */
+    padding: 0px;
+    overflow-x: auto;
+    max-width: 200vh;
+    background-color: #282c34; /* dark background similar to many code editors */
+    color: #abb2bf; /* soft white text color */
+    padding-left: 16px;
+    padding-right: 16px;
+    padding-bottom: 16px;
+    border-radius: 0px;
+    margin: 0em 0;
+    overflow-x: auto; /* allow scrolling on overflow */
+    font-family: 'Consolas', 'Monaco', 'Courier New', Courier, monospace; /* common monospace fonts */
+    font-size: 0.8em;
+    text-align: left;
+    /* position: absolute; */
+    top: 4; /* Align the top of the content with the top of the header */
+    left: 0; /* Align the left edge of the content with the left edge of the header */
+    z-index: 2; /*Lower z-index ensures content is below header */
+    /* width: 100%; Ensure the content spans the full width of the container */
+    /* max-width: 180vh; */
+    margin-left: 70px;
+    margin-right: 16px;
+}
+
+
+/* If you want to highlight specific Python syntax statically (as an example) */
+.experiment-details .code-block .keyword { color: #c678dd; } /* Python keywords like def, or class */
+.experiment-details .code-block .string { color: #ade077; } /* Strings */
+.experiment-details .code-block .comment { color: #0ebbc4; } /* Comments */
+.experiment-details .code-block .function { color: #61afef; } /* Function names */
+/* Add more as needed for different elements */
+
+
+.code-header {
+    /* position: relative; */
+    padding: 0px;
+    padding-left: 16px;
+    padding-top: 0px;
+    cursor: pointer;
+    display: flex; /* Use flexbox for alignment */
+    align-items: center; /* Center items vertically */
+    background-color: #282c34;
+    border-bottom: 0px solid #282c34;
+    border-radius: 0px;
+    color: #abb2bf; /* soft white text color */
+    padding: 0px;
+    margin-left: 70px;
+    margin-right: 16px;
+    overflow-x: auto; /* allow scrolling on overflow */
+    font-family: 'Consolas', 'Monaco', 'Courier New', Courier, monospace; /* common monospace fonts */
+    font-size: 0.8em;
+    text-align: left;
+    /* width: 100%; */
+    /* max-width: 180vh; */
+}
+
+.block {
+    max-width: 180vh; /* Adjust the width as needed */
+    margin: 1em auto; /* Center the block with margin */
+    padding: 10px; /* Add padding inside the block */
+    font-family: 'Noto Sans', sans-serif; /* Specify the font family */
+    /* font-size: calc(1em + 0.5vw); Use responsive font size */
+    text-align: left; /* Align text to the left */
+    word-wrap: break-word; /* Allow long words to break and wrap onto the next line */
+    white-space: normal; /* Ensure whitespace is handled normally, allowing wrapping */
+    /* Additional styles for appearance */
+    /* border-radius: 4px; Optional: rounded corners */
+    background-color: #ffffff; /* Optional: background color */
+    color: #333; /* Optional: text color */
+    /* border-radius: 20px; */
+    font-family: 'Consolas', 'Monaco', 'Lucida Console', 'Courier New', monospace;
+    font-size: .8em;
+}
+
+.experiment-text, .experiment-image {
+    max-width: 180vh; /* Adjust the width as needed */
+    /* margin: .8em auto; Center the block with margin */
+    padding: 0px; /* Add padding inside the block */
+    padding-bottom: 16px; /* Add padding inside the block */
+    padding-right: 16px; /* Add padding inside the block */
+    font-family: 'Noto Sans', sans-serif; /* Specify the font family */
+    /* font-size: calc(1em + 0.5vw); Use responsive font size */
+    text-align: left; /* Align text to the left */
+    word-wrap: break-word; /* Allow long words to break and wrap onto the next line */
+    white-space: normal; /* Ensure whitespace is handled normally, allowing wrapping */
+    /* Additional styles for appearance */
+    /* border-radius: 4px; Optional: rounded corners */
+    background-color: #ffffff; /* Optional: background color */
+    color: #333; /* Optional: text color */
+    font-family: 'Consolas', 'Monaco', 'Lucida Console', 'Courier New', monospace;
+    font-size: .8em;
+    margin-left: 70px;
+}
+
+.exe-text {
+    max-width: 180vh; /* Adjust the width as needed */
+    /* margin: .8em auto; Center the block with margin */
+    padding: 0px; /* Add padding inside the block */
+    padding-bottom: 16px; /* Add padding inside the block */
+    font-family: 'Noto Sans', sans-serif; /* Specify the font family */
+    /* font-size: calc(1em + 0.5vw); Use responsive font size */
+    text-align: left; /* Align text to the left */
+    word-wrap: break-word; /* Allow long words to break and wrap onto the next line */
+    white-space: normal; /* Ensure whitespace is handled normally, allowing wrapping */
+    /* Additional styles for appearance */
+    /* border-radius: 4px; Optional: rounded corners */
+    background-color: #ffffff; /* Optional: background color */
+    color: #333; /* Optional: text color */
+    font-family: 'Consolas', 'Monaco', 'Lucida Console', 'Courier New', monospace;
+    font-size: .8em;
+    margin-left: 70px;
+}
+
+.experiment-image {
+    max-width: 100%;
+    height: auto;
+    /* align-items: center; */
+    display: block;
+    margin: 70px 70px 
+    /* ; Adds 10px margin on top and bottom, and auto margin on the sides to center the image */
+}
+
+.content-table {
+    width: 100%; /* Makes the table fill the container */
+    height: 100%; /* Optional: Makes the table fill the container height */
+    position: relative; /* Position relative to its normal position */
+    /* Add more styling as needed */
+}
+
+.collapsible-toggle {
+    cursor: pointer;
+    margin-left: 10px; /* Ensure some space between the text and the icon */
+    margin-right: 5px; /* Ensure some space between the text and the icon */
+    position: relative; /* Position relative to the collapsible-container */
+    top: 0;
+    left: 0;
+    background: none;
+    border: none;
+    color: #f39f32;
+    font-size: 1.2em;
+    cursor: pointer;
+    transform: rotate(0deg); /* Rotate ">" to point downwards when expanded */
+    transition: transform 0.3s; /* Smooth rotation animation */
+}
+
+.collapsible-toggle.collapsed {
+    transform: rotate(90deg); /* Reset rotation when collapsed */
+    color: #b1acac
+}
+
+.collapsible-container {
+    position: relative;
+    margin-bottom: 1em;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    
+}
+
+.collapsible-container-code {
+    position: relative;
+    margin-bottom: 0.1em;
+    border: 0px solid #ddd;
+    /* border-radius: 10px; */
+    /* box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); */
+}
+
+.collapsible-header {
+    padding: 10px;
+    cursor: pointer;
+    display: flex; /* Use flexbox for alignment */
+    align-items: center; /* Center items vertically */
+    background-color: #f7f7f7;
+    border-bottom: 1px solid #ddd;
+    border-radius: 10px;
+}
+
+.page-title h2 {
+    text-align: center;
+    margin: 20px 0; /* Adjust spacing as needed */
+}
+
+#header {
+    text-align: center;
+    margin-bottom: 20px; /* Adjust spacing as needed */
+}
+
+.instructions {
+    text-align: left;
+    margin-top: 20px; /* Adjust spacing as needed */
+    font-style: italic; /* Optional styling */
+}
+
+.task {
+    text-align: center;
+    /* margin-top: 20px; Adjust spacing as needed */
+    font-style: italic; /* Optional styling */
+    padding: 0px 120px
+    /* width: 75% */
+}
+
+.collapsible-content {
+    padding: 20px;
+    overflow: hidden; /* Hide content initially */
+    background-color: #ffffff;
+}
+
+.experiment-image {
+    max-width: 256px; /* Adjust based on your needs */
+    margin: 5px;
+    display: inline-block; /* To display images side by side */
+}
+
+.maia-image {
+    max-width: 50px; /* Adjust based on your needs */
+    margin: 5px;
+    display: inline-block; /* To display images side by side */
+    align-items: left; 
+}
+
+.collapsible-content-container {
+    margin-bottom: 0px;
+    border: 0px solid #ccc;
+    border-radius: 4px;
+}
+
+.collapsible-content-header {
+    padding: 0px;
+    background-color: #f9f9f9;
+    cursor: pointer;
+    border-bottom: 1px solid #ccc;
+    font-family: 'Noto Sans', sans-serif;
+}
+
+
+/* .collapsible-content {
+    padding: 10px;
+} */
+
+.container {
+    display: flex;
+    align-items: center; /* Aligns items vertically in the center */
+    justify-content: center; /* Horizontal centering */
+    /* height: 100vh; Use the full height of the viewport */
+}
+
+.profile-image {    
+    width: 100px; /* Adjust the size of the image */
+    height: auto; /* Maintain the aspect ratio of the image */
+    border-radius: 50%; /* Optional: Makes the image circular */
+    margin-right: 10px; /* Adds some space between the image and the speech bubble */
+}
+
+.speech-bubble {
+    position: relative;
+    background-color: #f0f0f0;
+    border-radius: 10px;
+    padding: 10px;
+    max-width: 500px; /* Adjust based on your content */
+    font-family: 'Consolas', 'Monaco', 'Lucida Console', 'Courier New', monospace;
+    font-size: 0.8em;
+    text-align: justify;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    margin-left: 10px;
+    margin-right: 10px;
+
+}
+
+.speech-bubble:after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: -10px; /* Adjust if needed */
+    width: 0;
+    height: 0;
+    border: 5px solid transparent; /* Adjust the size of the triangle */
+    border-right-color: #f0f0f0; /* Match the background-color of the speech bubble */
+    border-left: 0;
+    margin-top: -5px; /* Adjust based on the border size */
+    transform: translateY(-50%);
+}
+
+.maia-font {
+    font-family: 'Consolas', 'Monaco', 'Lucida Console', 'Courier New', monospace;
+    font-size: 0.8em;
+}
+
+hr {
+    width: 60%; /* Sets the width of the <hr> to 80% of its container's width */
+    margin: 30px auto; /* Centers the <hr> horizontally and adds vertical spacing */
+    border: none; /* Removes the default border */
+    height: 1px; /* Sets the thickness of the line */
+    background-color: #a3a3a3; /* Sets the color of the line */
+}
+
+@keyframes typing {
+    0% { 
+      width: 0;
+      visibility: visible;
+    }
+    1% {
+      visibility: visible;
+    }
+    100% {
+      width: 100%;
+      visibility: visible;      
+    }
+  }
+  
+  .typewriter-line {
+    text-align: justify;
+    display: inline-block;
+    overflow: hidden;
+    white-space: nowrap;
+    border-right: 0px solid; /* Simulates the cursor */
+    visibility: hidden; /* Start with lines hidden */
+    font-family: 'Consolas', 'Monaco', 'Lucida Console', 'Courier New', monospace;
+    font-size: 0.8em;
+  }
+  
+
+  @keyframes cursorBlink {
+    0%, 100% { border-color: transparent; }
+    50% { border-color: black; } /* Adjust color as needed */
+  }
+  
+ .bold-text {
+    font-family: 'Noto Sans', sans-serif;
+    font-weight: bold; /* or 700 */
+}

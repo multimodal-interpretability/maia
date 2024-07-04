@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Open+Sans:wght@400&display=swap">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MAIA Neuron Explorer</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <br>
+    <div class="container">
+        <img src="./maia_robot.png" alt="This is MAIA!" class="profile-image">
+        <!-- <div class="speech-bubble"> -->
+            <div id="typewriter"></div>
+        <!-- </div> -->
+        <!-- <div class="speech-bubble">Hi! I'm MAIA (a Multimodal Automated Interpretability Agent). I ran experiments on neurons inside a variety of vision models to describe their behavior. Hover over each unit to see the label I gave it, and click on the unit to see my full experiment.</div> -->
+    </div>
+    <hr>
+    <div class="page-title">
+        <h2>MAIA Experiment Browser</h2> <!-- Page title -->
+    </div>
+
+    <div id="header">
+        <br>
+        <label for="modelDropdown"></label> <!-- Added label for accessibility -->
+        <select id="modelDropdown">
+            <!-- Options will be populated by JavaScript -->
+        </select>
+    </div>
+    <!-- <br> -->
+    <div id="taskDescription">
+        <!-- Dynamically generated task descriptions will go here -->
+    </div>
+    <br>
+    <br>
+    <div id="networkContainer">
+        <!-- Dynamically generated network content will go here -->
+    </div>
+    <br>
+    <!-- <div id="experimentDetails" class="hidden"> -->
+        <!-- Experiment details will be displayed here -->
+    <!-- </div> -->
+    <br>
+    <!-- <div class="instructions"> -->
+        <!-- <p>Hover over the units to see MAIA label for each. Click on a unit to see MAIA's full interpretation experiment.</p> Instructions for users -->
+    <!-- </div> -->
+    <script src="script.js"></script>
+</body>
+</html>

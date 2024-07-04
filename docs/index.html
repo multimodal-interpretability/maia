@@ -1,0 +1,373 @@
+ <!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="description"
+        content="A Multimodal Automated Interpretability Agent that autonomously conducts experiments on other systems to explain their behavior.">
+  <meta name="keywords" content="Interpretability, LLMs, Multimodal, Vision">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MAIA</title>
+
+  <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro"
+        rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css?family=Roboto:400,700" rel="stylesheet">
+
+  <link rel="stylesheet" href="./static/css/bulma.min.css">
+  <link rel="stylesheet" href="./static/css/bulma-carousel.min.css">
+  <link rel="stylesheet" href="./static/css/bulma-slider.min.css">
+  <link rel="stylesheet" href="./static/css/fontawesome.all.min.css">
+  <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+  <link rel="stylesheet" href="./static/css/index.css">
+  <link rel="icon" href="./static/images/favicon.svg">
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script defer src="./static/js/fontawesome.all.min.js"></script>
+  <script src="./static/js/bulma-carousel.min.js"></script>
+  <script src="./static/js/bulma-slider.min.js"></script>
+  <script src="./static/js/index.js"></script>
+
+  <style>
+  .title-text {
+	  display: inline-block;
+	  word-break: break-word;
+	  hyphens: auto;
+   }
+    @media screen and (max-width: 768px) {
+      .image-text-container {
+        flex-direction: column;
+        align-items: center;
+      }
+    
+      .image-text-container img {
+        margin-left: 0;
+        margin-right: 0;
+        margin-bottom: 20px;
+        max-width: 100%;
+        height: auto;
+      }
+      .title-text {  
+	font-size: 2rem;
+      }
+
+    } 
+  </style>
+</head>
+<body>
+
+<section class="hero">
+  <div class="hero-body">
+    <div class="container is-max-desktop">
+      <div class="columns is-centered">
+        <div class="column has-text-centered">
+          <h1 class="title is-1 publication-title"><div class="title-text">A Multimodal Automated Interpretability Agent</div></h1>
+          <div class="is-size-5 publication-authors">
+            <span class="author-block">
+              <a href="https://tamarott.github.io/">Tamar Rott Shaham</a><sup>*</sup>,</span>
+            <span class="author-block">
+              <a href="https://cogconfluence.com">Sarah Schwettmann</a><sup>*</sup>,</span>
+		        <br>
+            <span class="author-block">
+              <a href="https://frankxwang.github.io/">Franklin Wang</a>,</span>
+            <span class="author-block">
+              <a href="https://twitter.com/AchyutaBot">Achyuta Rajaram</a>,</span>
+            <span class="author-block">
+              <a href="https://evandez.com/">Evan Hernandez</a>,</span>
+            <span class="author-block">
+              <a href="https://www.mit.edu/~jda/">Jacob Andreas</a>,</span>
+            <span class="author-block">
+              <a href="https://groups.csail.mit.edu/vision/torralbalab/">Antonio Torralba</a>
+            </span>
+          </div>
+		
+	  * indicates equal contribution.
+
+          <div class="is-size-5 publication-authors">
+            <span class="author-block">MIT CSAIL</span>
+          </div> 
+
+	  <div class="is-size-4 publication-authors">
+            <span class="author-block">ICML 2024</span>
+          </div> 
+
+          <div class="column has-text-centered">
+            <div class="publication-links">
+              <!-- PDF Link. -->
+              <span class="link-block">
+                <a href="https://arxiv.org/pdf/2404.14394.pdf"
+                   class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon">
+                      <i class="fas fa-file-pdf"></i>
+                  </span>
+                  <span>Paper</span>
+                </a>
+              </span>
+              <span class="link-block">
+		<a href="https://arxiv.org/abs/2404.14394"
+                   class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon">
+                      <i class="ai ai-arxiv"></i>
+                  </span>
+                  <span>arXiv</span>
+             	 </a>   
+              </span>
+              <!-- Code Link. -->
+              <span class="link-block">
+              	<a href="https://github.com/multimodal-interpretability/maia" 
+                   class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon">
+                      <i class="fab fa-github"></i>
+                  </span>
+                  <span>Code</span>
+              	</a>  
+              </span>
+              <span class="link-block">
+              	<a href="https://multimodal-interpretability.csail.mit.edu/maia/experiment-browser/" 
+                   class="external-link button is-normal is-rounded is-dark">
+                   <span class="icon">
+                    <img src="./static/figures/nn.png" width="20" height="20">
+                    </span>
+                  <span>Experiment Browser</span>
+              	</a>  
+              </span>
+            
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" style="margin-top: -55px; margin-bottom:-10px">
+    <div class="container is-max-desktop">
+        <div style="text-align: justify;">
+		<p><h3 class="title is-4">How can AI systems help us understand other AI systems?</h3></p>
+		<p>Interpretability Agents automate aspects of scientific experimentation to answer user queries about trained models. See the <a href="https://multimodal-interpretability.csail.mit.edu/maia/experiment-browser/" target="_blank">experiment browser</a> for more experiments.</p>
+	</div>
+    </div>
+</section>
+<section class="hero teaser" style="margin-top: -40px;">
+  <div class="container is-max-desktop">
+    <div class="hero-body">
+        <!-- <div style="display: flex; justify-content: center; width: 100%;">
+            <img src="./static/figures/tench_gif.gif" style="width: 95%; height: auto;" />
+        </div> -->
+<!--         <video width="1280" height="480" autoplay muted controls loop> -->
+        <video autoplay muted controls loop style="width: 100%;">
+          <source src="static/figures/tench_movie.mp4" type="video/mp4">
+          Your browser does not support the video tag.
+        </video>
+    </div>
+  </div>
+</section>
+
+
+
+
+<section class="section" style="margin-top: -75px; margin-bottom:-10px">
+    <div class="container is-max-desktop">
+        <div style="text-align: justify;">
+<!-- 		<p><h3 class="title is-4">How can AI systems help us understand other AI systems?</h3></p> -->
+		<p>Understanding of a neural model can take many forms. For instance, we might want to know when and how the system relies on sensitive or spurious features, identify systematic errors in its predictions, or learn how to modify the training data and model architecture to improve accuracy and robustness. Today, answering these types of questions often involves significant human effort—researchers must formalize their question, formulate hypotheses about a model’s decision-making process, design datasets on which to evaluate model behavior, then use these datasets to refine and validate hypotheses. As a result, this type of understanding is slow and expensive to obtain, even about the most widely used models.</p><br>
+		<p>Automated Interpretability approaches have begun to address the issue of scale. Recently, such approaches have used pretrained language models like GPT-4 (in <a href="https://openaipublic.blob.core.windows.net/neuron-explainer/paper/index.html" target="_blank">Bills et al. 2023</a>) or Claude (in <a href="https://transformer-circuits.pub/2023/monosemantic-features" target="_blank">Bricken et al. 2023</a>) to generate feature explanations. In earlier work, we introduced MILAN (<a href="https://arxiv.org/abs/2201.11114" target="_blank">Hernandez et al. 2022</a>), a captioner model trained on human feature annotations that takes as input a feature visualization and outputs a description of that feature. But automated approaches that use learned models to label features leave something to be desired: they are primarily tools for one-shot hypothesis generation (<a href="https://arxiv.org/abs/2309.10312" target="_blank">Huang et al. 2023</a>) rather than causal explanation, they characterize behavior on a limited set of inputs, and they are often low precision.</p><br>
+		<!-- <p>Our current line of research aims to build tools that help users understand models, while combining the flexibility of human experimentation with the scalability of automated techniques. In <a href="https://arxiv.org/abs/2309.03886" target="_blank">Schwettmann et al. 2023</a>, we introduced the <em>Automated Interpretability Agent</em> (AIA) paradigm, where an LM-based agent interactively probes systems to explain their behavior. We now introduce a multimodal AIA, with a vision-language model backbone and an API of tools for designing experiments on other systems. With simple modifications to the user query, the same modular system can field both "macroscopic" questions like identifying systematic biases in model predictions (see the tench example above), as well as "microscopic" questions like describing individual features (see example below).</p><br> -->
+		<p>Our current line of research aims to build tools that help users understand models, while combining the flexibility of human experimentation with the scalability of automated techniques. We introduce the <b>M</b>ultimodal <b>A</b>utomated <b>I</b>nterpretability <b>A</b>gent (MAIA), which designs experiments to answer user queries about components of AI systems. MAIA iteratively generates hypotheses, runs experiments that test these hypotheses, observes experimental outcomes, and updates hypotheses until it can answer the user query. MAIA builds on the <em>Automated Interpretability Agent</em> (AIA) paradigm we introduced in <a href="https://arxiv.org/abs/2309.03886" target="_blank">Schwettmann et al. 2023</a>, where an LM-based agent interactively probes systems to explain their behavior. MAIA is equipped with a vision-language model backbone and an API of <a href="#tools-description">tools</a> for designing interpretability experiments. With simple modifications to the user query to the agent, the same modular system can field both "macroscopic" questions like identifying systematic biases in model predictions (see the tench example above), as well as "microscopic" questions like describing individual features (see example below).</p><br>
+	</div>
+    </div>
+</section>
+	
+<section class="hero teaser" style="margin-top: -5px;">
+  <div class="container is-max-desktop">
+    <div class="hero-body">
+        <!-- <div style="display: flex; justify-content: center; width: 100%;">
+            <img src="./static/figures/bowtie_gif.gif" style="width: 95%; height: auto;" />
+        </div> -->
+        <video autoplay muted controls loop style="width: 100%;">
+          <source src="static/figures/bowtie_movie.mp4" type="video/mp4">
+          Your browser does not support the video tag.
+        </video>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container is-max-desktop">
+    <!-- Abstract. -->
+    <div class="columns is-centered">
+      <div class="content">
+        <h2 class="title is-3 has-text-centered">MAIA</h2>
+        <div class="content image-text-container" style="display: flex; align-items: center;">
+          <img src="./static/figures/MAIA_schematic.png" alt="MAIA Schematic" style="margin-right: 20px; width: 40%;">
+          <p style="text-align: justify;">
+            MAIA is a system that uses neural models to automate neural model understanding tasks like feature interpretation and failure mode discovery.
+            It equips a pre-trained vision-language model with a set of tools that support iterative experimentation on subcomponents of other models to explain their behavior. These include tools commonly used by human interpretability researchers: for synthesizing and editing inputs, computing maximally activating exemplars from real-world datasets, and summarizing and describing experimental results.
+            <i>Interpretability experiments</i> proposed by MAIA compose these tools to describe and explain system behavior.
+          </p>
+        </div>
+        <hr>
+      </div>
+    </div>
+    <!--/ Abstract. -->
+  </div>
+</section>
+
+
+<section id="tools-description" class="hero teaser" style="margin-top: -5px;">
+  <div class="container is-max-desktop">
+    <div class="hero-body">
+      <h2 class="title is-3">MAIA uses tools to design experiments on other systems</h2>
+      <div class="content" style="text-align: justify;">
+        <p>MAIA composes interpretability subroutines into python programs to answer user queries about a system. What kind of experiments does MAIA design? Below we highlight example usage of individual tools to run experiments on neurons inside common vision architectures (CLIP, ResNet, DINO). These are experimental excerpts intended to demonstrate tool use (often, MAIA runs many more experiments to reach its final conclusion!) For full experiment logs, check out our interactive <a href="https://multimodal-interpretability.csail.mit.edu/maia/experiment-browser/" target="_blank">experiment browser</a>. </p>
+      </div>
+      <div class="content" style="text-align: justify;">
+      <h3 class="subtitle is-5" style="text-align: justify;">Visualizing Dataset Exemplars</h3>
+      <p>MAIA uses the <code>dataset_exemplars</code> tool to compute images from the ImageNet dataset that maximally activate a given system (in this case, an individual neuron). The <code>dataset_exemplars</code> tool returns masked versions of the images highlighting <i>image subregions</i> that maximally activate the neuron, as well as the activation value.</p><br>
+      </div>
+      <div style="display: flex; justify-content: center; width: 100%; margin-top: -15px; margin-bottom:30px">
+        <img src="./static/figures/dataset_exemplars.png" alt="Dataset Exemplars" style="width: 95%; height: auto;" />
+      </div>
+      <div class="content" style="text-align: justify;">
+      <h3 class="subtitle is-5" style="text-align: justify;">Generating Synthetic Test Images</h3>
+      <p>In addition to using real-world stimuli as inputs to the system it is trying to interpret, MAIA can generate additional synthetic inputs that test specific dimensions of a system's selectivity. MAIA uses the <code>text2image</code> function to call a pretrained text-guided diffusion model on prompts it writes. These prompts can test specific hypotheses about the neuron's selectivities, such as in the example of the tennis ball neuron below.</p><br>
+      </div>
+      <div style="display: flex; justify-content: center; width: 100%; margin-top: -15px; margin-bottom:30px ">
+        <img src="./static/figures/synthetic_exemplars.png" alt="Synthetic Exemplars" style="width: 95%; height: auto;" />
+      </div>
+      <div class="content" style="text-align: justify;">
+      <h3 class="subtitle is-5" style="text-align: justify;">Image editing</h3>
+      <p>MAIA can also call the <code>edit_images</code> tool which uses an text-based image editing module (Instruct Pix2Pix) to make image edits according to prompts written by MAIA. MAIA uses this tool to causally intervene on input space in order to test specific hypotheses about system behavior (e.g. whether the presence of a certain feature is required for the observed behavior!)</p><br>
+      </div>
+      <div style="display: flex; justify-content: center; width: 100%; margin-top: -15px; margin-bottom:-35px">
+        <img src="./static/figures/editing_images.png" alt="Synthetic Exemplars" style="width: 95%; height: auto;" />
+      </div>
+	    
+    </div>
+    <hr>
+  </div>
+</section>
+
+<section class="hero teaser" style="margin-top: -5px;">
+  <div class="container is-max-desktop">
+    <div class="hero-body">
+      <h2 class="title is-3">Using MAIA to remove spurious features</h2>
+      <div class="content" style="text-align: justify">
+        <p>Learned spurious features impose a challenge when machine learning models are applied in real-world scenarios, where test distributions can differ from training set statistics. We use MAIA to identify and remove learned spurious features inside a classification network (ResNet-18 trained on <a href="https://arxiv.org/abs/2303.05470" target="_blank">Spawrious</a>, a synthetically generated dataset involving four dog breeds with different backgrounds). In the train set, each dog breed is spuriously correlated with a certain background (e.g. snow, jungle, desert, beach) while in the test set, the breed-background pairings are scrambled. We use MAIA to find a subset of final layer neurons that robustly predict a single dog breed independently of spurious features, simply by changing the query in the user prompt (see paper for more experimental details). Below, see an example neuron that MAIA determines to be selective for spurious correlations between dog breed and background:</p>
+      </div>
+      <!-- <div style="display: flex; justify-content: center; width: 100%; margin-top:-40px; margin-bottom:-20px">
+        <img src="./static/figures/spurious_example.gif" alt="spurious example" style="width: 95%; height: auto; margin-top: -15px; margin-bottom: 10px;" />
+      </div> -->
+      <video autoplay muted controls loop style="width: 100%;">
+        <source src="static/figures/spurious_example.mp4" type="video/mp4">
+        Your browser does not support the video tag.
+      </video>
+      <div class="content" style="text-align: justify; margin-top:30px">
+        <p>As well as another example neuron that MAIA determines to be selective for a single dog breed, independently of its background:</p>
+      </div>
+      <!-- <div style="display: flex; justify-content: center; width: 100%; margin-top:-20px; margin-bottom:-20px">
+        <img src="./static/figures/selective_example.gif" alt="spurious example" style="width: 95%; height: auto; margin-top: -5px; margin-bottom: 10px;" />
+      </div> -->
+      <video autoplay muted controls loop style="width: 100%;">
+        <source src="static/figures/selective_example.mp4" type="video/mp4">
+        Your browser does not support the video tag.
+      </video>
+      <div class="content" style="text-align: justify; margin-top:30px; margin-bottom:-30px">
+        <p>We then use the features MAIA selects to train an unregularized logistic regression model on the unbalanced data. We find that with no access to unbiased examples, MAIA can identify and remove spurious features, improving model robustness under distribution shift by a wide margin, with an accuracy approaching that of fine-tuning on balanced data (see Section 5.1 of the paper for more results). </p>
+      </div>	    
+    </div>
+	  <hr>
+  </div>
+</section>
+
+<section class="hero teaser" style="margin-top: -5px;">
+  <div class="container is-max-desktop">
+    <div class="hero-body">
+      <h2 class="title is-3">Using MAIA to reveal biases</h2>
+      <div class="content" style="text-align: justify;">
+        <p>MAIA can also be applied to surface model-level biases. In a preliminary demonstration, we investigate biases in the outputs of an image classifier (ResNet-152) trained on a supervised ImageNet classification task. MAIA is easily adapted to this task by instrumenting an output logit corresponding to a particular image class as the system to be interpreted, and instructing MAIA to determine whether the actual distribution of images that receive high class scores matches the class label (see paper Appendix for full MAIA instructions).</p>
+      </div>
+      <figure style="display: flex; flex-direction: column; align-items: center; width: 100%;">
+        <img src="./static/figures/bias_categories.png" style="width: 95%; height: auto;" alt="Bias Categories" />
+        <figcaption style="text-align: center; margin-top: 10px; margin-bottom: -10px"><b>MAIA bias detection.</b> MAIA generates synthetic inputs to surface biases in ResNet-152 output classes. In some cases, MAIA discovers uniform behavior over the inputs (e.g. flagpole).</figcaption>
+      </figure>
+    </div>
+    <hr>
+  </div>
+</section>
+
+<section class="hero teaser" style="margin-top: -5px;">
+  <div class="container is-max-desktop">
+    <div class="hero-body">
+      <h2 class="title is-3">Validating MAIA explanations</h2>
+      <div class="content" style="text-align: justify;">
+        <p>In addition to being useful for applications like spurious feature removal and bias detection, are MAIA descriptions <em>accurate</em>?</p>
+	<p>We evaluate MAIA on the neuron description paradigm, which appears as a subroutine of many interpretabiltiy procedures (e.g. <a href="https://arxiv.org/abs/1704.05796" target="_blank">Bau et al. 2017</a>, <a href="https://arxiv.org/abs/2201.11114" target="_blank">Hernandez et al. 2022</a>, <a href="https://arxiv.org/abs/2204.10965" target="_blank">Oikarenen & Weng 2022</a>, <a href="https://openaipublic.blob.core.windows.net/neuron-explainer/paper/index.html" target="_blank">Bills et al. 2023</a>), and offers common baselines for comparison. Section 4 of the paper shows that MAIA labels outperform baseline methods at predicting behavior of neurons across variety of vision architectures in the wild, and in many cases, are comparable to labels produced by human experts using the MAIA API to run experiments on neurons.</p>
+	<p>Yet evaluating the absolute accuracy of MAIA's explanations of features in the wild presents a familiar challenge for the field of interpretability: measuring accuracy is difficult when ground truth explanations are unknown. Following the procedure we introduced in FIND (<a href="https://arxiv.org/abs/2309.03886" target="_blank">Schwettmann et al. 2023</a>) for validating the performance of interpretability methods on synthetic test systems mimicking real-world behaviors, we construct a set of synthetic vision neurons with known ground-truth selectivity.</p>
+      </div>
+	<div class="content image-text-container" style="display: flex; align-items: center;">
+          <img src="./static/figures/synthetic_schematic.png" alt="Synthetic Neurons" style="margin-right: 20px; width: 50%;">
+          <p style="text-align: justify;">
+           We simulate concept detection performed by neurons inside vision models using semantic segmentation. Synthetic neurons are built using an open-set concept detector that combines Grounded DINO (<a href="https://arxiv.org/abs/2303.05499" target="_blank">Liu et al., 2023</a>) with SAM (<a href="https://arxiv.org/abs/2304.02643" target="_blank">Kirillov et al., 2023</a>) to perform text-guided image segmentation. The ground-truth behavior of each neuron is determined by a text description of the concept(s) the neuron is selective for. MAIA descriptions can thus be compared to ground truth text description of each neuron to evaluate their accuracy. We find that MAIA descriptions match ground truth labels as well as descriptions produced by human experts (see Section 4 of the paper for more details). 
+          </p>
+        </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" style="margin-top: -5px;">
+    <div class="container is-max-desktop">
+        <div style="border-style: solid; border-width: 1px; border-color: darkgray; padding: 20px; text-align: justify;">
+            <p><h3 class="title is-4">Synthetic systems for evaluating automated interpretability methods</h3></p>
+            <p>The synthetic neurons used to evaluate MAIA are part of a broader effort to construct a testbed of systems with known ground-truth structure that mimic subcomponents of trained networks. Automated Interpretability Agents interactively probe these systems to generate descriptions of their behavior, which are then automatically evaluated. For more details on our FIND (Function Interpretation and Description) benchmark and to download additional test sytems in non-visual domains, see our previous work:</p>
+            <div class="content image-text-container" style="display: flex; align-items: center; padding-top: 20px;">
+                <div style="flex: 0 0 200px; margin-right: 20px;">
+                    <img src="./static/figures/FIND.gif" alt="FIND" style="width: 100%; height: auto;">
+                </div>
+                <div style="flex: 1;">
+                    <p style="font-weight: bold; font-size: 1.25rem; margin-bottom: 0.5rem;">FIND: A Function Description Benchmark for Evaluating Interpretability Methods</p>
+                    <p>Sarah Schwettmann*, Tamar Rott Shaham*, Joanna Materzynska, Neil Chowdhury, Shuang Li, Jacob Andreas, David Bau, Antonio Torralba. NeurIPS 2023.</p>
+                    <p>
+                        <a href="https://arxiv.org/abs/2309.03886" target="_blank" style="margin-right: 10px;">Paper</a>
+                        <a href="https://github.com/multimodal-interpretability/FIND" target="_blank" style="margin-right: 10px;">Dataset</a>
+                        <a href="https://multimodal-interpretability.csail.mit.edu/FIND-benchmark/" target="_blank" style="margin-right: 10px;">Project Page</a>
+                        <a href="https://news.mit.edu/2024/ai-agents-help-explain-other-ai-systems-0103" target="_blank">News</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+	
+<section class="section" id="BibTeX">
+  <div class="container is-max-desktop content">
+    <h2 class="title">BibTeX</h2>
+    <pre><code>@inproceedings{shaham2024multimodal,
+      title={A Multimodal Automated Interpretability Agent},
+      author={Tamar Rott Shaham and Sarah Schwettmann and Franklin Wang and Achyuta Rajaram and Evan Hernandez and Jacob Andreas and Antonio Torralba},
+      year={2024}
+      booktitle={Forty-first International Conference on Machine Learning}
+    }
+    </code></pre>
+  </div>
+</section>
+
+
+	
+<footer class="footer">
+  <div class="columns is-centered">
+    <div class="column is-8">
+      <div class="content" style="text-align: center;">
+        <p>
+          This website is adapted from the <a href="https://github.com/nerfies/nerfies.github.io" class="footer-link">Nerfies template</a>, which you are free to borrow if you link back to it in the footer.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+</footer>
+
+
+</body>
+</html>

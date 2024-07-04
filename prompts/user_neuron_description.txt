@@ -1,0 +1,33 @@
+Your overall task is to describe the visual concepts that maximally activate a neuron inside a deep network for computer vision. 
+To do that you are provided with a library of Python functions to run experiments on the specific neuron (inside the "System" class) given the functions provided in the "Tools" class. Make sure to use a variety of tools from the library to maximize your experimentation power.
+Some neurons might be selective for very specific concepts, a group of unrelated concepts, or a general concept, so try to be creative in your experiment and try to test both general and specific concepts. If a neuron is selective for multiple concepts, you should describe each of those concepts in your final description. 
+At each experiment step, write Python code that will conduct your experiment on the tested neuron, using the following format:
+[CODE]: 
+```python
+def execute_command(system, tools)
+    # gets an object of the system class, an object of the tool class, and performs experiments on the neuron with the tools
+    ...
+    tools.save_experiment_log(...)
+```
+Finish each experiment by documenting it by calling the "save_experiment_log" function. Do not include any additional implementation other than this function. Do not call "execute_command" after defining it. Include only a single instance of experiment implementation at each step.
+
+Each time you get the output of the neuron, try to summarize what inputs that activate the neuron have in common (where that description is not influenced by previous hypotheses). Then, write multiple hypotheses that could explain the visual concept(s) that activate the neuron. Note that the neuron can be selective for more than one concept.
+For example, these hypotheses could list multiple concepts that were highlighted in the images and the neuron is selective for (e.g. dogs OR cars OR birds), provide different explanations for the same concept, describe the same concept at different levels of abstraction, etc. Some of the concepts can be quite specific, test hypotheses that are both general and very specific.
+Then write a list of initial hypotheses about the neuron selectivity in the format:
+[HYPOTHESIS LIST]: 
+Hypothesis_1: <hypothesis_1>
+...
+Hypothesis_n: <hypothesis_n>.
+
+After each experiment, wait to observe the outputs of the neuron. Then your goal is to draw conclusions from the data, update your list of hypotheses, and write additional experiments to test them. Test the effects of both local and global differences in images using the different tools in the library. If you are unsure about the results of the previous experiment you can also rerun it, or rerun a modified version of it with additional tools.
+Use the following format:
+[HYPOTHESIS LIST]: ## update your hypothesis list according to the image content and related activation values. Only update your hypotheses if image activation values are higher than previous experiments.
+[CODE]: ## conduct additional experiments using the provided python library to test *ALL* the hypotheses. Test different and specific aspects of each hypothesis using all of the tools in the library. Write code to run the experiment in the same format provided above. Include only a single instance of experiment implementation.
+
+Continue running experiments until you prove or disprove all of your hypotheses. Only when you are confident in your hypothesis after proving it in multiple experiments, output your final description of the neuron in the following format:
+
+[DESCRIPTION]: <final description> ## Your description should be selective (e.g. very specific: "dogs running on the grass" and not just "dog") and complete (e.g. include all relevant aspects the neuron is selective for). In cases where the neuron is selective for more than one concept, include in your description a list of all the concepts separated by logical "OR".
+
+[LABEL]: <final label drived from the hypothesis or hypotheses> ## a label for the neuron generated from the hypothesis (or hypotheses) you are most confident in after running all experiments. They should be concise and complete, for example, "grass surrounding animals", "curved rims of cylindrical objects", "text displayed on computer screens", "the blue sky background behind a bridge", and "wheels on cars" are all appropriate. You should capture the concept(s) the neuron is selective for. Only list multiple hypotheses if the neuron is selective for multiple distinct concepts. List your hypotheses in the format:
+[LABEL 1]: <label 1>
+[LABEL 2]: <label 2>

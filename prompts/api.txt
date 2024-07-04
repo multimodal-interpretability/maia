@@ -1,0 +1,393 @@
+import torch
+from typing import List, Tuple
+
+class System:
+    """
+    A Python class containing the vision model and the specific neuron to interact with.
+    
+    Attributes
+    ----------
+    neuron_num : int
+        The unit number of the neuron.
+    layer : string
+        The name of the layer where the neuron is located.
+    model_name : string
+        The name of the vision model.
+    model : nn.Module
+        The loaded PyTorch model.
+
+    Methods
+    -------
+    load_model(model_name: str) -> nn.Module
+        Gets the model name and returns the vision model from PyTorch library.
+    call_neuron(image_list: List[torch.Tensor]) -> Tuple[List[int], List[str]]
+        returns the neuron activation for each image in the input image_list as well as the activation map 
+        of the neuron over that image, that highlights the regions of the image where the activations 
+        are higher (encoded into a Base64 string).
+    """
+    def __init__(self, neuron_num: int, layer: str, model_name: str, device: str):
+        """
+        Initializes a neuron object by specifying its number and layer location and the vision model that the neuron belongs to.
+        Parameters
+        -------
+        neuron_num : int
+            The unit number of the neuron.
+        layer : str
+            The name of the layer where the neuron is located.
+        model_name : str
+            The name of the vision model that the neuron is part of.
+        device : str
+            The computational device ('cpu' or 'cuda').
+        """
+        self.neuron_num = neuron_num
+        self.layer = layer
+        self.device = torch.device(f"cuda:{device}" if torch.cuda.is_available() else "cpu")       
+        self.model = self.load_model(model_name)
+
+
+    def load_model(self, model_name: str) -> torch.nn.Module:
+        """
+        Gets the model name and returns the vision model from pythorch library.
+        Parameters
+        ----------
+        model_name : str
+            The name of the model to load.
+        
+        Returns
+        -------
+        nn.Module
+            The loaded PyTorch vision model.
+        
+        Examples
+        --------
+        >>> # load "resnet152"
+        >>> def execute_command(model_name) -> nn.Module:
+        >>>   model = load_model(model_name: str)
+        >>>   return model
+        """
+        return load_model(model_name)
+    
+    def call_neuron(self, image_list: List[torch.Tensor]) -> Tuple[List[int], List[str]]:
+        """
+        The function returns the neuron’s maximum activation value (in int format) for each of the images in the list as well as the activation map of the neuron over each of the images that highlights the regions of the image where the activations are higher (encoded into a Base64 string).
+        
+        Parameters
+        ----------
+        image_list : List[torch.Tensor]
+            The input image
+        
+        Returns
+        -------
+        Tuple[List[int], List[str]]
+            For each image in image_list returns the activation value of the neuron on that image, and a masked image, 
+            with the region of the image that caused the high activation values highlighted (and the rest of the image is darkened). Each image is encoded into a Base64 string.
+
+        
+        Examples
+        --------
+        >>> # test the activation value of the neuron for the prompt "a dog standing on the grass"
+        >>> def execute_command(system, tools) -> Tuple[int, str]:
+        >>>     prompt = ["a dog standing on the grass"]
+        >>>     image = tools.text2image(prompt)
+        >>>     activation_list, activation_map_list = system.call_neuron(image)
+        >>>     return activation_list, activation_map_list
+        >>> # test the activation value of the neuron for the prompt "a dog standing on the grass" and the neuron activation value for the same image but with a lion instead of a dog
+        >>> def execute_command(system, tools) -> Tuple[int, str]:
+        >>>     prompt = ["a dog standing on the grass"]
+        >>>     edits = ["replace the dog with a lion"]
+        >>>     all_image, all_prompts = tools.edit_images(prompt, edits)
+        >>>     activation_list, activation_map_list = system.call_neuron(all_images)
+        >>>     return activation_list, activation_map_list
+        
+        """
+        return call_neuron(image_list)
+
+class Tools:
+    """
+    A Python class containing tools to interact with the neuron implemented in the system class, 
+    in order to run experiments on it.
+    
+    Attributes
+    ----------
+    experiment_log: str
+        A log of all the experiments, including the code and the output from the neuron.
+
+
+    Methods
+    -------
+    dataset_exemplars(system: object) -> Tuple(List[int],List[str])
+        This experiment provides good coverage of the behavior observed on a very large dataset of images and therefore represents the typical behavior of the neuron on real images.
+        This function characterizes the prototipycal behavior of the neuron by computing its activation on all images in the ImageNet dataset and returning the 15 highest activation values and the images that produced them. 
+        The images are masked to highlight the specific regions that produce the maximal activation. The images are overlaid with a semi-opaque mask, such that the maximally activating regions remain unmasked.
+    edit_images(prompt_list_org_image : List[str], editing_instructions_list : List[str]) -> Tuple[List[Image.Image], List[str]]
+        This function enables loclized testing of specific hypotheses about how variations on the content of a single image affect neuron activations.
+        Gets a list of input prompt and a list of corresponding editing instructions, then generate images according to the input prompts and edits each image based on the instructions given in the prompt using a text-based image editing model.
+        This function is very useful for testing the causality of the neuron in a controlled way, for example by testing how the neuron activation is affected by changing one aspect of the image.
+        IMPORTANT: Do not use negative terminology such as "remove ...", try to use terminology like "replace ... with ..." or "change the color of ... to ...".
+    text2image(prompt_list: str) -> Tuple[torcu.Tensor]
+        Gets a list of text prompt as an input and generates an image for each prompt in the list using a text to image model.
+        The function returns a list of images.
+    summarize_images(self, image_list: List[str]) -> str:    
+        This function is useful to summarize the mutual visual concept that appears in a set of images.
+        It gets a list of images at input and describes what is common to all of them, focusing specifically on unmasked regions.
+    describe_images(synthetic_image_list: List[str], synthetic_image_title:List[str]) -> str
+        Provides impartial descriptions of images. Do not use this function on dataset exemplars.
+        Gets a list of images and generat a textual description of the semantic content of the unmasked regions within each of them.
+        The function is blind to the current hypotheses list and therefore provides an unbiased description of the visual content.
+    save_experiment_log(activation_list: List[int], image_list: List[str], image_titles: List[str], image_textual_information: Union[str, List[str]]) -> None
+        documents the current experiment results as an entry in the experiment log list. if self.activation_threshold was updated by the dataset_exemplars function, 
+        the experiment log will contains instruction to continue with experiments if activations are lower than activation_threshold.
+        Results that are loged will be available for future experiment (unlogged results will be unavailable).
+        The function also update the attribure "result_list", such that each element in the result_list is a dictionary of the format: {"<prompt>": {"activation": act, "image": image}}
+        so the list contains all the resilts that were logged so far.
+    """
+
+    def __init__(self):
+        """
+        Initializes the Tools object.
+
+        Parameters
+        ----------
+        experiment_log: store all the experimental results
+        """
+        self.experiment_log = []
+        self.results_list = []
+
+
+    def dataset_exemplars(self, system: object) -> Tuple(List[int],List[str])
+        """
+        This method finds images from the ImageNet dataset that produce the highest activation values for a specific neuron.
+        It returns both the activation values and the corresponding exemplar images that were used 
+        to generate these activations (with the highly activating region highlighted and the rest of the image darkened). 
+        The neuron and layer are specified through a 'system' object.
+        This experiment is performed on real images and will provide a good approximation of the neuron behavior.
+        
+        Parameters
+        ----------
+        system : object
+            An object representing the specific neuron and layer within the neural network.
+            The 'system' object should have 'layer' and 'neuron_num' attributes, so the dataset_exemplars function 
+            can return the exemplar activations and masked images for that specific neuron.
+
+        Returns
+        -------
+        tuple
+            A tuple containing two elements:
+            - The first element is a list of activation values for the specified neuron.
+            - The second element is a list of exemplar images (as Base64 encoded strings) corresponding to these activations.
+
+        Example
+        -------
+        >>> def execute_command(system, tools)
+        >>>     activation_list, image_list = self.dataset_exemplars(system)
+        >>>     return activation_list, image_list
+        """
+        
+        return dataset_exemplars(system)
+
+    def edit_images(self, prompt_list_org_image : List[str], editing_instructions_list : List[str]) -> Tuple[List[Image.Image], List[str]]:
+        """
+        This function enables localized testing of specific hypotheses about how variations in the content of a single image affect neuron activations.
+        Gets a list of prompts to generate images, and a list of corresponding editing instructions as inputs. Then generates images based on the image prompts and edits each image based on the instructions given in the prompt using a text-based image editing model (so there is no need to generate the images outside of this function).
+        This function is very useful for testing the causality of the neuron in a controlled way, for example by testing how the neuron activation is affected by changing one aspect of the image.
+        IMPORTANT: for the editing instructions, do not use negative terminology such as "remove ...", try to use terminology like "replace ... with ..." or "change the color of ... to"
+        The function returns a list of images, constructed in pairs of original images and their edited versions, and a list of all the corresponding image prompts and editing prompts in the same order as the images.
+
+        Parameters
+        ----------
+        prompt_list_org_image : List[str]
+            A list of input prompts for image generation. These prompts are used to generate images which are to be edited by the prompts in editing_instructions_list.
+        editing_instructions_list : List[str]
+            A list of instructions for how to edit the images in image_list. Should be the same length as prompt_list_org_image.
+            Edits should be relatively simple and describe replacements to make in the image, not deletions.
+
+        Returns
+        -------
+        Tuple[List[Image.Image], List[str]]
+            A list of all images where each unedited image is followed by its edited version. 
+            And a list of all the prompts corresponding to each image (e.g. the input prompt followed by the editing instruction).
+
+        Examples
+        --------
+        >>> # test the activation value of the neuron for the prompt "a dog standing on the grass" and the neuron activation value for the same image but with a cat instead of a dog
+        >>> def execute_command(system, tools) -> Tuple[int, str]:
+        >>>     prompt = ["a dog standing on the grass"]
+        >>>     edits = ["replace the dog with a cat"]
+        >>>     all_image, all_prompts = tools.edit_images(prompt, edits)
+        >>>     activation_list, activation_map_list = system.call_neuron(all_images)
+        >>>     return activation_list, activation_map_list
+        >>> # test the activation value of the neuron for the prompt "a dog standing on the grass" and the neuron activation values for the same image but with a different action instead of "standing":
+        >>> def execute_command(system, tools) -> Tuple[int, str]:
+        >>>     prompts = ["a dog standing on the grass"]*3
+        >>>     edits = ["make the dog sit","make the dog run","make the dog eat"]
+        >>>     all_images, all_prompts = tools.edit_images(prompts, edits)
+        >>>     activation_list, activation_map_list = system.call_neuron(all_images)
+        >>>     return activation_list, activation_map_list
+        """
+
+        return edit_images(image, edits)
+
+
+    def text2image(self, prompt_list: List[str]) -> List[Image.Image]:
+        """Gets a list of text prompts as input, generates an image for each prompt in the list using a text to image model.
+        The function returns a list of images.
+
+        Parameters
+        ----------
+        prompt_list : List[str]
+            A list of text prompts for image generation.
+
+        Returns
+        -------
+        List[Image.Image]
+            A list of images, corresponding to each of the input prompts. 
+
+        Examples
+        --------
+        >>> # test the activation value of the neuron for the prompt "a dog standing on the grass"
+        >>> def execute_command(system, tools) -> Tuple[int, str]:
+        >>>     prompt = ["a dog standing on the grass"]
+        >>>     image = tools.text2image(prompt)
+        >>>     activation_list, activation_map_list = system.call_neuron(image)
+        >>>     return activation_list, activation_map_list
+        >>> # test the activation value of the neuron for the prompt “a fox and a rabbit watch a movie under a starry night sky” “a fox and a bear watch a movie under a starry night sky” “a fox and a rabbit watch a movie at sunrise”
+        >>> def execute_command(system, tools) -> Tuple[int, str]:
+        >>>     prompt_list = [“a fox and a rabbit watch a movie under a starry night sky”, “a fox and a bear watch a movie under a starry night sky”,“a fox and a rabbit watch a movie at sunrise”]
+        >>>     images = tools.text2image(prompt_list)
+        >>>     activation_list, activation_map_list = system.call_neuron(images)
+        >>>     return activation_list, activation_map_list
+        """
+
+        return text2image(prompt_list)
+
+    def summarize_images(self, image_list: List[str]) -> str:
+        """
+        This function is useful to summarize the mutual visual concept that appears in a set of images.
+        It gets a list of images at input and describes what is common to all of them, focusing specifically on unmasked regions.
+
+        Parameters
+        ----------
+        image_list : list
+            A list of images in Base64 encoded string format.
+        
+        Returns
+        -------
+        str
+            A string with a descriptions of what is common to all the images.
+
+        Example
+        -------
+        >>> # tests dataset exemplars and return textual summarization of what is common for all the maximally activating images
+        >>> def execute_command(system, tools):
+        >>>     activation_list, image_list = self.dataset_exemplars(system)
+        >>>     prompt_list = []
+        >>>     for i in range(len(activation_list)):
+        >>>          prompt_list.append(f'dataset exemplar {i}') # for the dataset exemplars we don't have prompts, therefore need to provide text titles
+        >>>     summarization = tools.summarize_images(image_list)
+        >>>     return summarization
+        """
+
+        return summarize_images(image_list)
+
+    def describe_images(self, image_list: List[str], image_title:List[str]) -> str:
+        """
+        Provides impartial description of the highlighted image regions within an image.
+        Generates textual descriptions for a list of images, focusing specifically on highlighted regions.
+        This function translates the visual content of the highlited region in the image to a text description. 
+        The function operates independently of the current hypothesis list and thus offers an impartial description of the visual content.        
+        It iterates through a list of images, requesting a description for the 
+        highlighted (unmasked) regions in each synthetic image. The final descriptions are concatenated 
+        and returned as a single string, with each description associated with the corresponding 
+        image title.
+
+        Parameters
+        ----------
+        image_list : list
+            A list of images in Base64 encoded string format.
+        image_title : callable
+            A list of strings with the image titles that will be use to list the different images. Should be the same length as image_list. 
+
+        Returns
+        -------
+        str
+            A concatenated string of descriptions for each image, where each description 
+            is associated with the image's title and focuses on the highlighted regions 
+            in the image.
+
+        Example
+        -------
+        >>> def execute_command(system, tools):
+        >>>     prompt_list = [“a fox and a rabbit watch a movie under a starry night sky”, “a fox and a bear watch a movie under a starry night sky”,“a fox and a rabbit watch a movie at sunrise”]
+        >>>     images = tools.text2image(prompt_list)
+        >>>     activation_list, image_list = system.call_neuron(images)
+        >>>     descriptions = tools.describe_images(image_list, prompt_list)
+        >>>     return descriptions
+        """
+
+        return describe_images(image_list, image_title)
+
+
+    def save_experiment_log(self, activation_list: List[int], image_list: List[str], image_titles: List[str], image_textual_information: Union[str, List[str]]):
+        """documents the current experiment results as an entry in the experiment log list. if self.activation_threshold was updated by the dataset_exemplars function, 
+        the experiment log will contain instruction to continue with experiments if activations are lower than activation_threshold.
+        Results that are logged will be available for future experiments (unlogged results will be unavailable).
+        The function also updates the attribute "result_list", such that each element in the result_list is a dictionary of the format: {"<prompt>": {"activation": act, "image": image}}
+        so the list contains all the results that were logged so far.
+
+        Parameters
+        ----------
+        activation_list : List[int]
+            A list of the activation values that were achived for each of the images in "image_list". 
+        image_list : List[str]
+            A list of the images that were generated using the text2image model and were tested. Should be the same length as activation_list. 
+        image_titles : List[str]
+            A list of the text lables for the images. Should be the same length as activation_list. 
+        image_textual_information: Union[str, List[str]]
+            A string or a list of strings with additional information to log such as the image summarization and/or the image textual descriptions.
+        
+        Returns
+        -------
+            None
+            
+
+        Examples
+        --------
+        >>> # tests the activation value of the neuron for the prompts “a fox and a rabbit watch a movie under a starry night sky” “a fox and a bear watch a movie under a starry night sky” “a fox and a rabbit watch a movie at sunrise”, describes the images and logs the results and the image descriptions 
+        >>> def execute_command(system, tools):
+        >>>     prompt_list = [“a fox and a rabbit watch a movie under a starry night sky”, “a fox and a bear watch a movie under a starry night sky”,“a fox and a rabbit watch a movie at sunrise”]
+        >>>     images = tools.text2image(prompt_list)
+        >>>     activation_list, activation_map_list = system.call_neuron(images)
+        >>>     descriptions = tools.describe_images(images, prompt_list)
+        >>>     tools.save_experiment_log(activation_list, activation_map_list, prompt_list, descriptions)
+        >>>     return 
+        >>> # tests dataset exemplars, use umage summarizer and logs the results
+        >>> def execute_command(system, tools):
+        >>>     activation_list, image_list = self.dataset_exemplars(system)
+        >>>     prompt_list = []
+        >>>     for i in range(len(activation_list)):
+        >>>          prompt_list.append(f'dataset_exemplars {i}') # for the dataset exemplars we don't have prompts, therefore need to provide text titles
+        >>>     summarization = tools.summarize_images(image_list)
+        >>>     tools.save_experiment_log(activation_list, activation_map_list, prompt_list, summarization)
+        >>>     return
+        >>> # test the effect of changing a dog into a cat. Describes the images and logs the results.
+        >>> def execute_command(system, tools) -> Tuple[int, str]:
+        >>>     prompt = ["a dog standing on the grass"]
+        >>>     edits = ["replace the dog with a cat"]
+        >>>     all_images, all_prompts = tools.edit_images(prompt, edits)
+        >>>     activation_list, activation_map_list = system.call_neuron(all_images)
+        >>>     descriptions = tools.describe_images(activation_map_list, all_prompts)
+        >>>     tools.save_experiment_log(activation_list, activation_map_list, all_prompts, descriptions)
+        >>>     return 
+        >>> # test the effect of changing the dog's action on the activation values. Describes the images and logs the results.
+        >>> def execute_command(system, prompt_list) -> Tuple[int, str]:
+        >>>     prompts = ["a dog standing on the grass"]*3
+        >>>     edits = ["make the dog sit","make the dog run","make the dog eat"]
+        >>>     all_images, all_prompts = tools.edit_images(prompts, edits)
+        >>>     activation_list, activation_map_list = system.call_neuron(all_images)
+        >>>     descriptions = tools.describe_images(activation_map_list, all_prompts)
+        >>>     tools.save_experiment_log(activation_list, activation_map_list, all_prompts, descriptions)
+        >>>     return 
+        """
+        
+        return save_experiment_log(activation_list, image_list, prompt_list, description)
+
