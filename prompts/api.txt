@@ -7,20 +7,19 @@ class System:
     
     Attributes
     ----------
-    neuron_num : int
-        The unit number of the neuron.
-    layer : string
-        The name of the layer where the neuron is located.
-    model_name : string
-        The name of the vision model.
-    model : nn.Module
-        The loaded PyTorch model.
+    unit_dict : dict
+        Dict containing path to each unit: model_name->layer_name->neuron_num
+        {
+        model_name: {
+                layer_name: neuron_list
+                }
+        }
 
     Methods
     -------
-    load_model(model_name: str) -> nn.Module
-        Gets the model name and returns the vision model from PyTorch library.
-    call_neuron(image_list: List[torch.Tensor]) -> Tuple[List[int], List[str]]
+    select_neuron(self, model_name: str, layer_name: str, neuron_index: int)
+        change neuron model is pointed to
+    call_neuron(image_list: List[torch.Tensor])->Tuple[List[int], List[str]]
         returns the neuron activation for each image in the input image_list as well as the activation map 
         of the neuron over that image, that highlights the regions of the image where the activations 
         are higher (encoded into a Base64 string).
@@ -44,29 +43,6 @@ class System:
         self.device = torch.device(f"cuda:{device}" if torch.cuda.is_available() else "cpu")       
         self.model = self.load_model(model_name)
 
-
-    def load_model(self, model_name: str) -> torch.nn.Module:
-        """
-        Gets the model name and returns the vision model from pythorch library.
-        Parameters
-        ----------
-        model_name : str
-            The name of the model to load.
-        
-        Returns
-        -------
-        nn.Module
-            The loaded PyTorch vision model.
-        
-        Examples
-        --------
-        >>> # load "resnet152"
-        >>> def execute_command(model_name) -> nn.Module:
-        >>>   model = load_model(model_name: str)
-        >>>   return model
-        """
-        return load_model(model_name)
-    
     def call_neuron(self, image_list: List[torch.Tensor]) -> Tuple[List[int], List[str]]:
         """
         The function returns the neuron’s maximum activation value (in int format) for each of the images in the list as well as the activation map of the neuron over each of the images that highlights the regions of the image where the activations are higher (encoded into a Base64 string).
@@ -98,7 +74,18 @@ class System:
         >>>     all_image, all_prompts = tools.edit_images(prompt, edits)
         >>>     activation_list, activation_map_list = system.call_neuron(all_images)
         >>>     return activation_list, activation_map_list
-        
+        >>> # test the neuron activation value of 2 neurons for the same prompt "a white dog standing on the grass"
+        >>>  def execute_command(system, tools) -> Tuple[int, str]:                     
+        >>>     prompt = ["a white dog standing on the grass"]
+        >>>     image = tools.text2image(prompt)
+        >>>     system.select_neuron("resnet152", "layer4", 80)
+        >>>     activation_list, activation_map_list = system.call_neuron(image)
+        >>>     system.select_neuron("clip-RN50", "layer4", 100)
+        >>>     activation_list1, activation_map_list1 = system.call_neuron(image)
+        >>>     activation_list += activation_list1
+        >>>     activation_map_list += activation_map_list1
+        >>>     
+        >>>     return activation_list, activation_map_list
         """
         return call_neuron(image_list)
 
@@ -390,4 +377,3 @@ class Tools:
         """
         
         return save_experiment_log(activation_list, image_list, prompt_list, description)
-

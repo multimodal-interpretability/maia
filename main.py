@@ -19,30 +19,18 @@ random.seed(0000)
 def call_argparse():
     parser = argparse.ArgumentParser(description='Process Arguments')	
     parser.add_argument('--maia', type=str, default='gpt-4-vision-preview', choices=['gpt-4-vision-preview','gpt-4-turbo'], help='maia agent name')	
-    parser.add_argument('--task', type=str, default='neuron_description', choices=['neuron_description'], help='task to solve, default is neuron description') #TODO: add other tasks
-    parser.add_argument('--model', type=str, default='resnet152', choices=['resnet152','clip-RN50','dino_vits8'], help='model to interp') #TODO: add synthetic neurons
-    parser.add_argument('--units', type=str2dict, default='layer4=122', help='units to interp')	
-    parser.add_argument('--unit_file_path', type=str, default='./neuron_indices/', help='units to interp')	
-    parser.add_argument('--num_of_units', type=int, default=10, help='units to interp (if mode "unit_mode" is set to "random")')	
-    parser.add_argument('--debug', action='store_true', help='debug mode, print dialogues to screen', default=False)
+    parser.add_argument('--task', type=str, default='mult', help='task to solve, default is neuron description') #TODO: add other tasks
+    parser.add_argument('--unit_file_name', type=str, default='test.json', help='units to interp')	
+    parser.add_argument('--n_exemplars', type=int, default=15, help='number of examplars for initialization')	
+    parser.add_argument('--images_per_prompt', type=int, default=10, help='name of text2image model')	
     parser.add_argument('--path2save', type=str, default='./results/', help='a path to save the experiment outputs')	
     parser.add_argument('--path2prompts', type=str, default='./prompts/', help='path to prompt to use')	
     parser.add_argument('--path2exemplars', type=str, default='./exemplars/', help='path to net disect top 15 exemplars images')	
     parser.add_argument('--device', type=int, default=0, help='gpu decvice to use (e.g. 1)')	
     parser.add_argument('--text2image', type=str, default='sd', choices=['sd','dalle'], help='name of text2image model')	
+    parser.add_argument('--debug', action='store_true', help='debug mode, print dialogues to screen', default=False)
     args = parser.parse_args()
     return args
-
-# Convert a comma-separated key=value pairs into a dictionary
-def str2dict(arg_value):
-    my_dict = {}
-    if arg_value:
-        for item in arg_value.split(':'):
-            key, value = item.split('=')
-            values = value.split(',')
-            my_dict[key] = [int(v) for v in values]
-        embed()
-    return my_dict
 
 
 # return the prompt according to the task
@@ -83,6 +71,7 @@ def save_dialouge(history,path2save):
     save_feild(history, path2save+'/label.txt', '[LABEL]: ', end=True)
 
 # final instructions to maia
+# TODO - Overload will break, not given tools
 def overload_instructions(prompt_path='./prompts/'):
     with open(f'{prompt_path}/final.txt', 'r') as file:
         final_instructions = file.read()
@@ -98,6 +87,7 @@ def get_code(maia_experiment):
     maia_code = maia_experiment.split('```python')[1].split('```')[0]
     return maia_code
 
+# TODO- This is different, examine user_prompt
 # maia experiment loop
 def interpretation_experiment(maia,system,tools,debug=False):
     round_count = 0
@@ -125,32 +115,47 @@ def interpretation_experiment(maia,system,tools,debug=False):
             else: # if the response is not the final description, and does not contains any python code, ask maia to provide more information
                 tools.update_experiment_log(role='execution', type="text", type_content="No code to run was provided, please continue with the experiments based on your findings.")
 
+def load_unit_config(unit_file_name):
+    with open(os.path.join("neuron_indices", unit_file_name)) as json_file:
+        unit_config = json.load(json_file)
+    return unit_config
 
 def main(args):
     maia_api, user_query = return_Prompt(args.path2prompts, setting=args.task) # load system prompt (maia api) and user prompt (the user query)
-    # TODO-  Convert to load json file
-    unit_inx = load_unit_file(args.unit_file_path) # returns a dictionary of {'layer':[units]} to explore
-    net_dissect = DatasetExemplars(path2exemplars=args.path2exemplars, ) # precomputes dataset examplars for tools.dataset_exemplars
-    for unit in units: 
-        print(layer,unit)
-        path2save = os.path.join(args.path2save,args.maia,args.model,str(layer),str(unit))
-        if os.path.exists(path2save+'/description.txt'): continue
-        os.makedirs(path2save, exist_ok=True)
-        system = System(unit, layer, args.model, args.device, net_dissect.thresholds) # initialize the system class
-        tools = Tools(path2save, args.device, net_dissect, text2image_model_name=args.text2image) # initialize the tools class
-        tools.update_experiment_log(role='system', type="text", type_content=maia_api) # update the experiment log with the system prompt
-        tools.update_experiment_log(role='user', type="text", type_content=user_query) # update the experiment log with the user prompt
-        interp_count = 0
-        while True:
-            try:
-                interp_count+=1
-                interpretation_experiment(args.maia,system,tools,args.debug) # this is where the magic happens! maia interactively execute experiments on the specified unit
-                save_dialouge(tools.experiment_log,path2save)
+    unit_config = load_unit_config(args.unit_file_name)
+    # TODO - When change to enum, change the following line
+    user_query += f'\n\n These are the neurons for this experiment:\n' + str(unit_config)
+    # Numbered file saving
+    path2save = generate_save_path(args)
+    os.makedirs(path2save, exist_ok=True)
+
+    net_dissect = DatasetExemplars(args.path2exemplars, args.n_exemplars, args.path2save, unit_config)
+    system = System(unit_config, net_dissect.thresholds, args.device)
+    tools = Tools(path2save, args.device, net_dissect, images_per_prompt=args.images_per_prompt, text2image_model_name=args.text2image)
+    tools.update_experiment_log(role='system', type="text", type_content=maia_api) # update the experiment log with the system prompt
+    tools.update_experiment_log(role='user', type="text", type_content=user_query) # update the experiment log with the user prompt
+    interp_count = 0
+    while True:
+        try:
+            interp_count+=1
+            interpretation_experiment(args.maia,system,tools,args.debug) # this is where the magic happens! maia interactively execute experiments on the specified unit
+            save_dialouge(tools.experiment_log,path2save)
+            break
+        except Exception as e:
+            print(e)
+            if interp_count>5: # if the interpretation process exceeds 5 rounds, save the current state and move to the next unit
                 break
-            except Exception as e:
-                print(e)
-                if interp_count>5: # if the interpretation process exceeds 5 rounds, save the current state and move to the next unit
-                    break
+
+def generate_save_path(args):
+    path2save = os.path.join(args.path2save,args.maia,args.unit_file_name)
+    if os.path.exists(path2save):
+        i = 0
+        numbered_path = path2save + "_" + str(i)
+        while os.path.exists(numbered_path):
+            i += 1
+            numbered_path = path2save + "_" + str(i)
+        path2save = numbered_path
+    return path2save
 
 if __name__ == '__main__':
     args = call_argparse()

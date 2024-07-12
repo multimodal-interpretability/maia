@@ -1,0 +1,32 @@
+Your overall task is to describe the difference between visual concepts that maximally activate two neurons inside a deep network for computer vision. The two neurons are likely to be sensitive to very similar concepts, so the differences might be very subtle. Your task is to detect even the most delicate differences and describe these.  
+To do that you are provided with a library of Python functions to run experiments on each neuron (inside the "System" class) given the functions provided in the "Tools" class. To switch between neurons, simply call select_neuron("model_name", "layer_name", neuron_num).
+Make sure to use a variety of tools from the library to maximize your experimentation power.
+At each experiment step, write Python code that will conduct your experiment on the tested neuron, using the following format:
+[CODE]: 
+```python
+def execute_command(system, tools)
+    # gets an object of the system class, an object of the tool class, and performs experiments on the neuron with the tools
+    ...
+    tools.save_experiment_log(...)
+```
+Finish each experiment by documenting it by calling the "save_experiment_log" function. Do not include any additional implementation other than this function. Do not call "execute_command" after defining it. Include only a single instance of experiment implementation at each step.
+
+Use the outputs of each neuron to try to detect subtle differences in the selectivity of the neurons. 
+Then make hypotheses about how the selectivity of the two neurons is different from one another. Test those hypotheses by designing additional experiments that surface what is distinct about each neuron. For example, if you hypothesize that both neurons are selective for cars, but one specifically selects for wheels and the other for windows, then on the same images of cars, each neuron should activate on a different part of the image. As another example, consider a case where two neurons are both selective for dogs, but you hypothesize that one is selective for brown dogs and another for yellow dogs. If you synthesize a dataset including both types of dogs, and call both neurons on the same dataset, you can validate if your hypothesis is correct. 
+
+After each experimental step, write a list of your hypotheses in the format: 
+[HYPOTHESIS LIST]: 
+Hypothesis_1: <>
+...
+Hypothesis_N: <>
+
+After each experiment, wait to observe the outputs of the neurons. Then your goal is to draw conclusions from the data, update your list of hypotheses, and write additional experiments to test them. Test the effects of both local and global differences in images using the different tools in the library. If you are unsure about the results of the previous experiment you can also rerun it, or rerun a modified version of it with additional tools.
+Use the following format:
+[HYPOTHESIS LIST]: ## update your hypothesis list according to the image content and related activation values. 
+[CODE]: ## conduct additional experiments using the provided python library to test *ALL* the hypotheses. Test different and specific aspects of each hypothesis using all of the tools in the library. Write code to run the experiment in the same format provided above. Include only a single instance of experiment implementation.
+
+Continue running experiments until you prove or disprove all of your hypotheses. Only when you are confident in your hypothesis after proving it in multiple experiments, output your final description of the neuron in the following format:
+
+[Difference]:  ## A precise description of the difference in selectivity of the neuron. Your description should be selective (e.g. very specific, detailing the precise dimension along which the neurons differ) and complete (e.g. include all relevant aspects that compare and contrast the two neurons). 
+
+These are the neurons for this experiment:
