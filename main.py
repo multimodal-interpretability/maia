@@ -16,20 +16,12 @@ import random
 
 random.seed(0000)
 
-# layers to explore for each model
-layers = {
-    "resnet152": ['conv1','layer1','layer2','layer3','layer4'],
-    "clip-RN50" : ['layer1','layer2','layer3','layer4'],
-    "dino_vits8": ['blocks.1.mlp.fc1','blocks.3.mlp.fc1','blocks.5.mlp.fc1','blocks.7.mlp.fc1','blocks.9.mlp.fc1','blocks.11.mlp.fc1']
-}
-
 def call_argparse():
     parser = argparse.ArgumentParser(description='Process Arguments')	
     parser.add_argument('--maia', type=str, default='gpt-4-vision-preview', choices=['gpt-4-vision-preview','gpt-4-turbo'], help='maia agent name')	
     parser.add_argument('--task', type=str, default='neuron_description', choices=['neuron_description'], help='task to solve, default is neuron description') #TODO: add other tasks
     parser.add_argument('--model', type=str, default='resnet152', choices=['resnet152','clip-RN50','dino_vits8'], help='model to interp') #TODO: add synthetic neurons
     parser.add_argument('--units', type=str2dict, default='layer4=122', help='units to interp')	
-    parser.add_argument('--unit_mode', type=str, default='manual', choices=['from_file','random','manual'], help='units to interp')	
     parser.add_argument('--unit_file_path', type=str, default='./neuron_indices/', help='units to interp')	
     parser.add_argument('--num_of_units', type=int, default=10, help='units to interp (if mode "unit_mode" is set to "random")')	
     parser.add_argument('--debug', action='store_true', help='debug mode, print dialogues to screen', default=False)
@@ -90,21 +82,6 @@ def save_dialouge(history,path2save):
     save_feild(history, path2save+'/description.txt', '[DESCRIPTION]: ')
     save_feild(history, path2save+'/label.txt', '[LABEL]: ', end=True)
 
-# returns a dictionary of {'layer':[units]} to explore
-def units2explore(unit_mode): 
-    if unit_mode == 'random':
-        unit_inx = {}
-        for layer in layers[args.model]:
-            unit_inx[layer]  = random.choices(range(0, 64 + 1), k=args.num_of_units)
-    elif unit_mode == 'from_file':
-        with open(os.path.join(args.unit_file_path,args.model+'.json'), 'r') as json_file:
-            unit_inx = json.load(json_file)
-    elif unit_mode == 'manual':
-        unit_inx = args.units
-    else:
-        raise ValueError("undefined unit mode.")
-    return unit_inx
-
 # final instructions to maia
 def overload_instructions(prompt_path='./prompts/'):
     with open(f'{prompt_path}/final.txt', 'r') as file:
@@ -151,30 +128,29 @@ def interpretation_experiment(maia,system,tools,debug=False):
 
 def main(args):
     maia_api, user_query = return_Prompt(args.path2prompts, setting=args.task) # load system prompt (maia api) and user prompt (the user query)
-    unit_inx = units2explore(args.unit_mode) # returns a dictionary of {'layer':[units]} to explore
-    for layer in unit_inx.keys(): 
-        units = unit_inx[layer]
-        net_dissect = DatasetExemplars(args.path2exemplars, args.path2save, args.model, layer, units) # precomputes dataset examplars for tools.dataset_exemplars
-        for unit in units: 
-            print(layer,unit)
-            path2save = os.path.join(args.path2save,args.maia,args.model,str(layer),str(unit))
-            if os.path.exists(path2save+'/description.txt'): continue
-            os.makedirs(path2save, exist_ok=True)
-            system = System(unit, layer, args.model, args.device, net_dissect.thresholds) # initialize the system class
-            tools = Tools(path2save, args.device, net_dissect, text2image_model_name=args.text2image) # initialize the tools class
-            tools.update_experiment_log(role='system', type="text", type_content=maia_api) # update the experiment log with the system prompt
-            tools.update_experiment_log(role='user', type="text", type_content=user_query) # update the experiment log with the user prompt
-            interp_count = 0
-            while True:
-                try:
-                    interp_count+=1
-                    interpretation_experiment(args.maia,system,tools,args.debug) # this is where the magic happens! maia interactively execute experiments on the specified unit
-                    save_dialouge(tools.experiment_log,path2save)
+    # TODO-  Convert to load json file
+    unit_inx = load_unit_file(args.unit_file_path) # returns a dictionary of {'layer':[units]} to explore
+    net_dissect = DatasetExemplars(path2exemplars=args.path2exemplars, ) # precomputes dataset examplars for tools.dataset_exemplars
+    for unit in units: 
+        print(layer,unit)
+        path2save = os.path.join(args.path2save,args.maia,args.model,str(layer),str(unit))
+        if os.path.exists(path2save+'/description.txt'): continue
+        os.makedirs(path2save, exist_ok=True)
+        system = System(unit, layer, args.model, args.device, net_dissect.thresholds) # initialize the system class
+        tools = Tools(path2save, args.device, net_dissect, text2image_model_name=args.text2image) # initialize the tools class
+        tools.update_experiment_log(role='system', type="text", type_content=maia_api) # update the experiment log with the system prompt
+        tools.update_experiment_log(role='user', type="text", type_content=user_query) # update the experiment log with the user prompt
+        interp_count = 0
+        while True:
+            try:
+                interp_count+=1
+                interpretation_experiment(args.maia,system,tools,args.debug) # this is where the magic happens! maia interactively execute experiments on the specified unit
+                save_dialouge(tools.experiment_log,path2save)
+                break
+            except Exception as e:
+                print(e)
+                if interp_count>5: # if the interpretation process exceeds 5 rounds, save the current state and move to the next unit
                     break
-                except Exception as e:
-                    print(e)
-                    if interp_count>5: # if the interpretation process exceeds 5 rounds, save the current state and move to the next unit
-                        break
 
 if __name__ == '__main__':
     args = call_argparse()
