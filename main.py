@@ -20,14 +20,15 @@ random.seed(0000)
 layers = {
     "resnet152": ['conv1','layer1','layer2','layer3','layer4'],
     "clip-RN50" : ['layer1','layer2','layer3','layer4'],
-    "dino_vits8": ['blocks.1.mlp.fc1','blocks.3.mlp.fc1','blocks.5.mlp.fc1','blocks.7.mlp.fc1','blocks.9.mlp.fc1','blocks.11.mlp.fc1']
+    "dino_vits8": ['blocks.1.mlp.fc1','blocks.3.mlp.fc1','blocks.5.mlp.fc1','blocks.7.mlp.fc1','blocks.9.mlp.fc1','blocks.11.mlp.fc1'],
+    "synthetic_neurons": ['mono','or','and']
 }
 
 def call_argparse():
     parser = argparse.ArgumentParser(description='Process Arguments')	
     parser.add_argument('--maia', type=str, default='gpt-4-vision-preview', choices=['gpt-4-vision-preview','gpt-4-turbo'], help='maia agent name')	
     parser.add_argument('--task', type=str, default='neuron_description', choices=['neuron_description'], help='task to solve, default is neuron description') #TODO: add other tasks
-    parser.add_argument('--model', type=str, default='resnet152', choices=['resnet152','clip-RN50','dino_vits8'], help='model to interp') #TODO: add synthetic neurons
+    parser.add_argument('--model', type=str, default='resnet152', choices=['resnet152','clip-RN50','dino_vits8','synthetic_neurons'], help='model to interp') #TODO: add synthetic neurons
     parser.add_argument('--units', type=str2dict, default='layer4=122', help='units to interp')	
     parser.add_argument('--unit_mode', type=str, default='manual', choices=['from_file','random','manual'], help='units to interp')	
     parser.add_argument('--unit_file_path', type=str, default='./neuron_indices/', help='units to interp')	
@@ -49,7 +50,6 @@ def str2dict(arg_value):
             key, value = item.split('=')
             values = value.split(',')
             my_dict[key] = [int(v) for v in values]
-        embed()
     return my_dict
 
 
@@ -152,16 +152,27 @@ def interpretation_experiment(maia,system,tools,debug=False):
 def main(args):
     maia_api, user_query = return_Prompt(args.path2prompts, setting=args.task) # load system prompt (maia api) and user prompt (the user query)
     unit_inx = units2explore(args.unit_mode) # returns a dictionary of {'layer':[units]} to explore
-    for layer in unit_inx.keys(): 
+    for layer in unit_inx.keys(): # for the synthetic neurons, the layer is the neuron type ("mono", "or", "and")
         units = unit_inx[layer]
-        net_dissect = DatasetExemplars(args.path2exemplars, args.path2save, args.model, layer, units) # precomputes dataset examplars for tools.dataset_exemplars
+        if args.model == 'synthetic_neurons':
+            net_dissect = SyntheticExemplars(os.path.join(args.path2exemplars, args.model), args.path2save, layer) # precomputes synthetic dataset examplars for tools.dataset_exemplars. 
+            with open(os.path.join('./synthetic-neurons-dataset/labels/',f'{layer}.json'), 'r') as file: # load the synthetic neuron labels
+                synthetic_neuron_data = json.load(file)
+        else:
+            net_dissect = DatasetExemplars(args.path2exemplars, args.path2save, args.model, layer, units) # precomputes dataset examplars for tools.dataset_exemplars
         for unit in units: 
             print(layer,unit)
             path2save = os.path.join(args.path2save,args.maia,args.model,str(layer),str(unit))
             if os.path.exists(path2save+'/description.txt'): continue
             os.makedirs(path2save, exist_ok=True)
-            system = System(unit, layer, args.model, args.device, net_dissect.thresholds) # initialize the system class
-            tools = Tools(path2save, args.device, net_dissect, text2image_model_name=args.text2image) # initialize the tools class
+            if args.model == 'synthetic_neurons':
+                gt_label = synthetic_neuron_data[unit]["label"].rsplit('_')
+                print("groundtruth label: ",gt_label)
+                system = Synthetic_System(unit, gt_label, layer, args.device)
+                tools = Tools(path2save, args.device, net_dissect, text2image_model_name=args.text2image, images_per_prompt=1) # initialize the tools class
+            else:
+                system = System(unit, layer, args.model, args.device, net_dissect.thresholds) # initialize the system class
+                tools = Tools(path2save, args.device, net_dissect, text2image_model_name=args.text2image) # initialize the tools class
             tools.update_experiment_log(role='system', type="text", type_content=maia_api) # update the experiment log with the system prompt
             tools.update_experiment_log(role='user', type="text", type_content=user_query) # update the experiment log with the user prompt
             interp_count = 0

@@ -5,3 +5,5 @@ wget -P ./exemplars data.csail.mit.edu/maia-exemplars/dino.zip
 unzip ./exemplars/dino.zip -d ./exemplars/
 wget -P ./exemplars data.csail.mit.edu/maia-exemplars/resnet152.zip
 unzip ./exemplars/resnet152.zip -d ./exemplars/
+wget -P ./exemplars data.csail.mit.edu/maia-exemplars/synthetic_neurons.zip
+unzip ./exemplars/synthetic_neurons.zip -d ./exemplars/

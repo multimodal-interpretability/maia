@@ -14,6 +14,8 @@ MAIA is a system that uses neural models to automate neural model understanding 
 **News** 
 \
 [July 3]: We release MAIA implementation code for neuron labeling 
+\
+[August 14]: Synthetic neurons are now available (both in `demo.ipynb` and in `main.py`)
 
 **This repo is under active development. Sign up for updates by email using [this google form](https://forms.gle/Zs92DHbs3Y3QGjXG6).**
 
@@ -45,6 +47,8 @@ jupyter notebook
 ```
 This command will start the Jupyter Notebook server and open the Jupyter Notebook interface in your default web browser. The interface will show all the notebooks, files, and subdirectories in this repo (assuming is was initiated from the maia path). Open ```demo.ipynb``` and proceed according to the instructions.
 
+NEW: `demo.ipynb` now supports synthetic neurons. Follow instalation instructions at `./synthetic-neurons-dataset/README.md`. After installation is done, you can define MAIA to run on synthetic neurons according to the instructions in `demo.ipynb`.
+
 ### Batch experimentation ###
 To run a batch of experiments, use ```main.py```:
 
@@ -73,3 +77,20 @@ Results are automatically saved to an html file under ```./results/``` and can b
 python -m http.server 80
 ```
 Once the server is up, open the html in [http://localhost:80](http://localhost:80/results/)
+
+#### Run MAIA on sythetic neurons ####
+
+You can now run maia on synthetic neurons with ground-truth labels (see sec. 4.2 in the paper for more details).
+
+Follow instalation instructions at `./synthetic-neurons-dataset/README.md`. Then you should be able to run `main.py` on synthetic neurons by calling e.g.:
+```bash
+python main.py --model synthetic_neurons --unit_mode manual --units mono=1,8:or=9:and=0,2,5
+``` 
+(neuron indices are specified according to the neuron type: "mono", "or" and "and").
+
+You can also use the .json file to run all synthetic neurons (or specify your own file):
+```bash
+python main.py --model synthetic_neurons --unit_mode from_file --unit_file_path ./neuron_indices/
+```
+### Acknowledgment ###
+[Christy](https://www.linkedin.com/in/christykl/) helped with cleaning up the synthetic neurons code for release.

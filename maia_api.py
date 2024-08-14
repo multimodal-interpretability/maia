@@ -27,7 +27,7 @@ from typing import List, Tuple
 from call_agent import ask_agent
 import time
 import math
-# import synthetic_neurons
+import synthetic_neurons
 import clip
 import torch.nn.functional as F
 
@@ -864,7 +864,7 @@ class Tools:
         """
         description_list = ''
         instructions = "Do not describe the full image. Please describe ONLY the unmasked regions in this image (e.g. the regions that are not darkened). Be as concise as possible. Return your description in the following format: [highlighted regions]: <your concise description>"
-        time.sleep(60)
+        # time.sleep(60)
         for ind,image in enumerate(image_list):
             history = [{'role':'system', 'content':'you are an helpful assistant'},{'role': 'user', 'content': [{"type":"text", "text": instructions}, {"type": "image_url", "image_url": "data:image/jpeg;base64," + image}]}]
             description = ask_agent('gpt-4-vision-preview',history)
@@ -1092,7 +1092,7 @@ class DatasetExemplars():
 
 class SyntheticExemplars():
     
-    def __init__(self, path2exemplars, n_exemplars, path2save, mode, im_size=224):
+    def __init__(self, path2exemplars, path2save, mode, n_exemplars=15, im_size=224):
         self.path2exemplars = path2exemplars
         self.n_exemplars = n_exemplars
         self.path2save = path2save
