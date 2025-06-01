@@ -10,6 +10,8 @@ import openai
 import requests
 import torch
 import torch.nn.functional as F
+import torchvision.models as models
+from torchvision import transforms
 from baukit import Trace
 from diffusers import (
     AutoPipelineForText2Image,
@@ -18,6 +20,7 @@ from diffusers import (
     StableDiffusionPipeline,
 )
 from PIL import Image
+import clip
 
 # Local imports
 from utils.call_agent import ask_agent
@@ -28,156 +31,148 @@ from utils.main_utils import generate_numbered_path
 
 class System:
     """
-    A Python class for interfacing with specified units within vision models.
+    A Python class containing the vision model and the specific neuron to interact with.
     
     Attributes
     ----------
-    units : List[Unit]
-        A list of units, each containing the model name, layer name, and neuron number.
-    unit : Unit
-        The current unit being analyzed.
-    model_wrapper : ModelInfoWrapper
-        The model wrapper for the current unit.
-    model_dict : Dict[str, ModelInfoWrapper]
-        A dictionary of model names and their corresponding ModelInfoWrapper objects.
+    neuron_num : int
+        The serial number of the neuron.
+    layer : string
+        The name of the layer where the neuron is located.
+    model_name : string
+        The name of the vision model.
+    model : nn.Module
+        The loaded PyTorch model.
+    neuron : callable
+        A lambda function to compute neuron activation and activation map per input image. 
+        Use this function to test the neuron activation for a specific image.
     device : torch.device
         The device (CPU/GPU) used for computations.
-    threshold : int
-        The current activation threshold for neuron analysis.
-    thresholds : Dict
-        A dictionary containing the threshold values for each unit.
 
     Methods
     -------
-    call_units(self, image_list: List[torch.Tensor], unit_ids:List[int])->List[List[Tuple[float, str]]]]]
-        For each image, returns each unit's maximum activation value
-        (in int format) over that image. Also returns masked images that
-        highlight the regions of the image where the activations are highest
-        (encoded into a Base64 string).
-
+    load_model(model_name: str)->nn.Module
+        Gets the model name and returns the vision model from PyTorch library.
+    call_neuron(image_list: List[torch.Tensor])->Tuple[List[int], List[str]]
+        returns the neuron activation for each image in the input image_list as well as the activation map 
+        of the neuron over that image, that highlights the regions of the image where the activations 
+        are higher (encoded into a Base64 string).
     """
-    def __init__(self, unit_dict: Dict[str, Dict[str, List[int]]], thresholds: Dict, device: Union[int, str]):
+    def __init__(self, neuron_num: int, layer: str, model_name: str, device: str, thresholds=None):
         """
-        Initializes a system for interfacing with a set of specified units.
+        Initializes a neuron object by specifying its number and layer location and the vision model that the neuron belongs to.
         Parameters
         -------
-        unit_dict : dict
-            {
-            model_name: {
-                    layer_name: neuron_list
-                    }
-            }
-        thesholds : dict
-            Contains the threshold values for each unit
+        neuron_num : int
+            The serial number of the neuron.
+        layer : str
+            The name of the layer that the neuron is located at.
+        model_name : str
+            The name of the vision model that the neuron is part of.
         device : str
             The computational device ('cpu' or 'cuda').
         """
-        self.units = self._enumerate_unit_dict(unit_dict)
+        self.neuron_num = neuron_num
+        self.layer = layer
         self.device = torch.device(f"cuda:{device}" if torch.cuda.is_available() else "cpu") 
-        self.thresholds = thresholds
-        # Loads and stores preprocessing info for each model being experimented with
-        # WARNING - Memory intensive for several/large models
-        model_names = unit_dict.keys()
-        self.model_dict = {model_name: ModelInfoWrapper(model_name, device) for model_name in model_names}
+        self.model_name = model_name      
+        self.preprocess = None
+        if 'dino' in model_name or 'resnet' in model_name:
+            self.preprocess = self._preprocess_imagenet
+        self.model = self.load_model(model_name) #if clip, the define self.preprocess
+        if thresholds is not None:
+            self.threshold = thresholds[self.layer][self.neuron_num]
+        else: 
+            self.threshold = 0
 
-        # Select first unit as current unit
-        self._select_unit(0)
-
-    def call_units(self, image_list: List[torch.Tensor], unit_ids:List[int])->List[List[Tuple[float, str]]]:
+    def load_model(self, model_name: str)->torch.nn.Module:
         """
-        For each specified unit, returns the unit’s maximum activation value
-        (in int format) for each image. Also returns masked images that
-        highlight the regions of the image where the activations are highest
-        (encoded into a Base64 string).
+        Gets the model name and returns the vision model from pythorch library.
+        Parameters
+        ----------
+        model_name : str
+            The name of the model to load.
+        
+        Returns
+        -------
+        nn.Module
+            The loaded PyTorch vision model.
+        
+        Examples
+        --------
+        >>> # load "resnet152"
+        >>> def execute_command(model_name) -> nn.Module:
+        >>>   model = load_model(model_name: str)
+        >>>   return model
+        """
+        if model_name=='resnet152':
+            resnet152 = models.resnet152(weights='IMAGENET1K_V1').to(self.device)  
+            model = resnet152.eval()
+        elif model_name == 'dino_vits8':
+            model = torch.hub.load('facebookresearch/dino:main', 'dino_vits8').to(self.device).eval()
+        elif model_name == "clip-RN50": 
+            name = 'RN50'
+            full_model, preprocess = clip.load(name)
+            model = full_model.visual.to(self.device).eval()
+            self.preprocess = preprocess
+        elif model_name == "clip-ViT-B32": 
+            name = 'ViT-B/32'
+            full_model, preprocess = clip.load(name)
+            model = full_model.visual.to(self.device).eval()
+            self.preprocess = preprocess
+        return model
+
+    def call_neuron(self, image_list: List[torch.Tensor])->Tuple[List[int], List[str]]:
+        """
+        The function returns the neuron’s maximum activation value (in int format) over each of the images in the list as well as the activation map of the neuron over each of the images that highlights the regions of the image where the activations are higher (encoded into a Base64 string).
         
         Parameters
         ----------
         image_list : List[torch.Tensor]
             The input image
-        unit_ids : List[int]
-            The unit ids to retrieve activations for.
         
         Returns
         -------
-        List[List[Tuple[float, str]]]
-            For each unit, stores the maximum activations and masked images as a tuple.
-            If only one unit is specified, returns a single tuple.
+        Tuple[List[int], List[str]]
+            For each image in image_list returns the maximum activation value of the neuron on that image, and a masked images, 
+            with the region of the image that caused the high activation values highlighted (and the rest of the image is darkened). Each image is encoded into a Base64 string.
+
         
         Examples
         --------
-        >>> # Test the activation value of a single unit for a prompt
-        >>> prompt = ["a man eating a gargantuan sandwich"]
-        >>> images = tools.text2image(prompt)
-        >>> activations, masked_images = system.call_units(images, [0])[0]
-        >>> tools.display(*activations, *masked_image)
-        >>>
-        >>> # Test the activation value of multiple units for the prompt "a dog standing on the grass"
-        >>> prompt = ["a dog standing on the grass"]
-        >>> images = tools.text2image(prompt)
-        >>> unit_ids = [0, 1]  # Example unit IDs to test
-        >>> unit_data = system.call_units(images, unit_ids)
-        >>> for activations, masked_images in unit_data:
-        >>>    tools.display(*masked_images, *activations)
-        >>>
-        >>> # Test the activation value of multiple units for multiple prompts
-        >>> prompt_list = ["a fox and a rabbit watch a movie under a starry night sky",
-        >>>                "a fox and a bear watch a movie under a starry night sky",
-        >>>                "a fox and a rabbit watch a movie at sunrise"]
-        >>> images = tools.text2image(prompt_list)
-        >>> unit_ids = [0, 1]  # Example unit IDs to test
-        >>> unit_data = system.call_units(images, unit_ids)
-        >>> for i in range(len(images)):
-        >>>     tools.display(prompt_list[i], images[i])
-        >>>     for j in range(len(unit_data)):
-        >>>         masked_images, activations = unit_data[j]
-        >>>         tools.display(f"unit {j}")
-        >>>         tools.display(masked_images[i], activations[i])
+        >>> # test the activation value of the neuron for the prompt "a dog standing on the grass"
+        >>> def execute_command(system, prompt_list) -> Tuple[int, str]:
+        >>>     prompt = ["a dog standing on the grass"]
+        >>>     image = text2image(prompt)
+        >>>     activation_list, activation_map_list = system.call_neuron(image)
+        >>>     return activation_list, activation_map_list
+        >>> # test the activation value of the neuron for the prompt “a fox and a rabbit watch a movie under a starry night sky” “a fox and a bear watch a movie under a starry night sky” “a fox and a rabbit watch a movie at sunrise”
+        >>> def execute_command(system.neuron, prompt_list) -> Tuple[int, str]:
+        >>>     prompt_list = [[“a fox and a rabbit watch a movie under a starry night sky”, “a fox and a bear watch a movie under a starry night sky”,“a fox and a rabbit watch a movie at sunrise”]]
+        >>>     images = text2image(prompt_list)
+        >>>     activation_list, activation_map_list = system.call_neuron(images)
+        >>>     return activation_list, activation_map_list
         """
-
-        output = []
-        for unit_id in unit_ids:
-            self._select_unit(unit_id)
-            unit_data = []
-            for image in image_list:
-                if  image==None: #for dalle
-                    activation = None
-                    masked_image = None
+        activation_list = []
+        masked_images_list = []
+        for image in image_list:
+            if  image==None: #for dalle
+                activation_list.append(None)
+                masked_images_list.append(None)
+            else:
+                if self.layer == 'last':
+                    tensor = self._preprocess_images(image)
+                    acts, image_class = self._calc_class(tensor)    
+                    activation_list.append(torch.round(acts[ind] * 100).item()/100)
+                    masked_images_list.append(image2str(image[0]))
                 else:
-                    if self.unit.layer == 'last':
-                        image = self.model_wrapper.preprocess_images(image)
-                        acts, image = self._calc_class(image)    
-                        activation = acts
-                        masked_image = None
-                    else:
-                        image = self.model_wrapper.preprocess_images(image)
-                        acts,masks = self._calc_activations(image)    
-                        ind = torch.argmax(acts).item()
-                        activation = acts[ind].item()
-                        masked_image = generate_masked_image(image[ind], masks[ind], "./temp.png", self.threshold)
-                unit_data.append((activation, masked_image))
-            output.append(unit_data)
-        
-        return output
-    
-    def _enumerate_unit_dict(self, unit_dict: Dict[str, Dict[str, List[int]]]) -> List[Unit]:
-        '''Stores the unit dictionary as a list of Unit objects.'''
-        unit_list = []
-        for model_name, layers in unit_dict.items():
-            for layer, neurons in layers.items():
-                for neuron_num in neurons:
-                    unit_list.append(Unit(model_name=model_name, layer=layer, neuron_num=neuron_num))
-        return unit_list
-
-    def _select_unit(self, unit_id: int):
-        """
-        Change the unit System is pointed to. Also loads the model and threshold for the unit.
-        """
-        self.unit = self.units[unit_id]
-        self.model_wrapper = self.model_dict[self.unit.model_name]
-        if self.thresholds:
-            self.threshold = self.thresholds[self.unit.model_name][self.unit.layer][self.unit.neuron_num]
-        else:
-            self.threshold = 0
+                    image = self._preprocess_images(image)
+                    acts,masks = self._calc_activations(image)    
+                    ind = torch.argmax(acts).item()
+                    masked_image = generate_masked_image(image[ind], masks[ind], "./temp.png", self.threshold)
+                    activation_list.append(torch.round(acts[ind] * 100).item()/100)   
+                    masked_images_list.append(masked_image)
+        return activation_list,masked_images_list
     
     @staticmethod
     def _spatialize_vit_mlp(hiddens: torch.Tensor) -> torch.Tensor:
@@ -222,19 +217,27 @@ class System:
         -------
         Tuple[int, torch.Tensor]
             Returns the maximum activation value of the neuron on the input image and a mask
+        
+        Examples
+        --------
+        >>> # load neuron 62, layer4 of resnet152
+        >>> def execute_command(model_name) -> callable:
+        >>>   model = load_model(model_name: str)
+        >>>   neuron = load_neuron(neuron_num=62, layer='layer4', model=model)
+        >>>   return neuron
         """
-        with Trace(self.model_wrapper.model, self.unit.layer) as ret:
-            _ = self.model_wrapper.model(image)
+        with Trace(self.model, self.layer) as ret:
+            _ = self.model(image)
             hiddens = ret.output
 
-        if "dino" in self.model_wrapper.model_name:
+        if "dino" in self.model_name:
             hiddens = self._spatialize_vit_mlp(hiddens)
 
         batch_size, channels, *_ = hiddens.shape
         activations = hiddens.permute(0, 2, 3, 1).reshape(-1, channels)
         pooled, _ = hiddens.view(batch_size, channels, -1).max(dim=2)
-        neuron_activation_map = hiddens[:, self.unit.neuron_num, :, :]
-        return(pooled[:,self.unit.neuron_num], neuron_activation_map)
+        neuron_activation_map = hiddens[:, self.neuron_num, :, :]
+        return(pooled[:,self.neuron_num], neuron_activation_map)
     
     def _calc_class(self, image: torch.Tensor)->Tuple[int, torch.Tensor]:
         """"
@@ -250,17 +253,48 @@ class System:
         -------
         Tuple[int, torch.Tensor]
             Returns the maximum activation value of the neuron on the input image and a mask
+        
+        Examples
+        --------
+        >>> # load neuron 62, layer4 of resnet152
+        >>> def execute_command(model_name) -> callable:
+        >>>   model = load_model(model_name: str)
+        >>>   neuron = load_neuron(neuron_num=62, layer='layer4', model=model)
+        >>>   return neuron
         """
-        logits = self.model_wrapper.model(image)
+        logits = self.model(image)
         prob = F.softmax(logits, dim=1)
         image_calss = torch.argmax(logits[0])
         activation = prob[0][image_calss]
-        activation = activation.item()
-        activation = round(activation, 4)
         return activation.item(), image
+    
+    def _preprocess_imagenet(self, image, normalize=True, im_size=224):
+        
+        if normalize:
+            preprocess = transforms.Compose([
+                transforms.Resize(im_size),
+                transforms.ToTensor(),
+                transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+            ])
+        else:
+            preprocess = transforms.Compose([
+                transforms.Resize(im_size),
+                transforms.ToTensor(),
+            ])
+        return preprocess(image)
+        
+
+    def _preprocess_images(self, images):
+        image_list = []
+        if type(images) == list:
+            for image in images:
+                image_list.append(self.preprocess(image).to(self.device))
+            batch_tensor = torch.stack(image_list)
+            return batch_tensor
+        else:
+            return self.preprocess(images).unsqueeze(0).to(self.device)
 
 
-# TODO - Set maia model for use in descriptions and summarization
 class Tools:
     """
     A Python class containing tools to interact with the units implemented in the system class, 
@@ -550,7 +584,6 @@ class Tools:
         if isinstance(description, Exception): return description
         return description
     
-    # TODO - Don't understand the purpose of this function
     def sampler(self, act, imgs, mask, prompt, threshold, method = 'max'):  
         if method=='max':
             max_ind = torch.argmax(act).item()
