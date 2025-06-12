@@ -124,7 +124,7 @@ class System:
             self.preprocess = preprocess
         return model
 
-    def call_neuron(self, image_list: List[torch.Tensor])->Tuple[List[int], List[str]]:
+    def call_neuron(self, image_list: List[str])->Tuple[List[int], List[str]]:
         """
         The function returns the neuron’s maximum activation value (in int format) for each of the images in the list as well as the original image (encoded into a Base64 string).
         
@@ -304,6 +304,91 @@ class System:
             return self.preprocess(images).unsqueeze(0).to(self.device)
 
 
+class Synthetic_System:
+    """
+    A Python class containing the vision model and the specific neuron to interact with.
+    
+    Attributes
+    ----------
+    neuron_num : int
+        The serial number of the neuron.
+    layer : string
+        The name of the layer where the neuron is located.
+    model_name : string
+        The name of the vision model.
+    model : nn.Module
+        The loaded PyTorch model.
+    neuron : callable
+        A lambda function to compute neuron activation and activation map per input image. 
+        Use this function to test the neuron activation for a specific image.
+    device : torch.device
+        The device (CPU/GPU) used for computations.
+
+    Methods
+    -------
+    load_model(model_name: str)->nn.Module
+        Gets the model name and returns the vision model from PyTorch library.
+    call_neuron(image_list: List[torch.Tensor])->Tuple[List[int], List[str]]
+        returns the neuron activation for each image in the input image_list as well as the activation map 
+        of the neuron over that image, that highlights the regions of the image where the activations 
+        are higher (encoded into a Base64 string).
+    """
+    def __init__(self, neuron_num: int, neuron_labels: str, neuron_mode: str, device: str):
+        
+        self.neuron_num = neuron_num
+        self.neuron_labels = neuron_labels
+        self.neuron = synthetic_neurons.SAMNeuron(neuron_labels, neuron_mode)
+        self.device = torch.device(f"cuda:{device}" if torch.cuda.is_available() else "cpu")       
+        self.threshold = 0
+        self.layer = neuron_mode
+
+
+    def call_neuron(self, image_list: List[torch.Tensor])->Tuple[List[int], List[str]]:
+        """
+        The function returns the neuron’s maximum activation value (in int format) over each of the images in the list as well as the activation map of the neuron over each of the images that highlights the regions of the image where the activations are higher (encoded into a Base64 string).
+        
+        Parameters
+        ----------
+        image_list : List[torch.Tensor]
+            The input image
+        
+        Returns
+        -------
+        Tuple[List[int], List[str]]
+            For each image in image_list returns the maximum activation value of the neuron on that image, and a masked images, 
+            with the region of the image that caused the high activation values highlighted (and the rest of the image is darkened). Each image is encoded into a Base64 string.
+
+        
+        Examples
+        --------
+        >>> # test the activation value of the neuron for the prompt "a dog standing on the grass"
+        >>> def execute_command(system, prompt_list) -> Tuple[int, str]:
+        >>>     prompt = ["a dog standing on the grass"]
+        >>>     image = text2image(prompt)
+        >>>     activation_list, activation_map_list = system.call_neuron(image)
+        >>>     return activation_list, activation_map_list
+        >>> # test the activation value of the neuron for the prompt “a fox and a rabbit watch a movie under a starry night sky” “a fox and a bear watch a movie under a starry night sky” “a fox and a rabbit watch a movie at sunrise”
+        >>> def execute_command(system.neuron, prompt_list) -> Tuple[int, str]:
+        >>>     prompt_list = [[“a fox and a rabbit watch a movie under a starry night sky”, “a fox and a bear watch a movie under a starry night sky”,“a fox and a rabbit watch a movie at sunrise”]]
+        >>>     images = text2image(prompt_list)
+        >>>     activation_list, activation_map_list = system.call_neuron(images)
+        >>>     return activation_list, activation_map_list
+        """
+        activation_list = []
+        masked_images_list = []
+        for image in image_list:
+            if  image==None: #for dalle
+                activation_list.append(None)
+                masked_images_list.append(None)
+            else:
+                acts, _, _, masks = self.neuron.calc_activations(image)    
+                ind = np.argmax(acts)
+                masked_image = image2str(masks[ind], "./temp_synthetic.png")
+                activation_list.append(acts[ind])
+                masked_images_list.append(masked_image)
+        return activation_list,masked_images_list
+
+
 class Tools:
     """
     A Python class containing tools to interact with the units implemented in the system class, 
@@ -392,7 +477,7 @@ class Tools:
         self.results_list = []
         self.html_path = generate_numbered_path(os.path.join(path2save, "experiment"), ".html")
 
-    def dataset_exemplars(self, unit_ids: List[int], system: System)->List[List[Tuple[float, str]]]:
+    def dataset_exemplars(self, system: System)->List[List[Tuple[float, str]]]:
         """
         This method finds images from the ImageNet dataset that produce the highest activation values for a specific neuron.
         It returns both the activation values and the corresponding exemplar images that were used to generate these activations.
