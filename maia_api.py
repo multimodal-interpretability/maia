@@ -28,6 +28,10 @@ from utils.api_utils import is_base64, format_api_content, generate_masked_image
 from utils.DatasetExemplars import DatasetExemplars
 from utils.main_utils import generate_numbered_path
 
+# New imports
+from utils.instdiff import InstructDiffusion
+from utils.flux import FluxImageGenerator
+
 
 class System:
     """
@@ -53,10 +57,8 @@ class System:
     -------
     load_model(model_name: str)->nn.Module
         Gets the model name and returns the vision model from PyTorch library.
-    call_neuron(image_list: List[torch.Tensor])->Tuple[List[int], List[str]]
-        returns the neuron activation for each image in the input image_list as well as the activation map 
-        of the neuron over that image, that highlights the regions of the image where the activations 
-        are higher (encoded into a Base64 string).
+    call_neuron(image_list: List[torch.Tensor]) -> Tuple[List[int], List[str]]
+        Returns the neuron activation for each image in the input image_list as well as the original image (encoded into a Base64 string).
     """
     def __init__(self, neuron_num: int, layer: str, model_name: str, device: str, thresholds=None):
         """
@@ -79,13 +81,13 @@ class System:
         self.preprocess = None
         if 'dino' in model_name or 'resnet' in model_name:
             self.preprocess = self._preprocess_imagenet
-        self.model = self.load_model(model_name) #if clip, the define self.preprocess
+        self.model = self._load_model(model_name) #if clip, the define self.preprocess
         if thresholds is not None:
             self.threshold = thresholds[self.layer][self.neuron_num]
         else: 
             self.threshold = 0
 
-    def load_model(self, model_name: str)->torch.nn.Module:
+    def _load_model(self, model_name: str)->torch.nn.Module:
         """
         Gets the model name and returns the vision model from pythorch library.
         Parameters
@@ -124,7 +126,7 @@ class System:
 
     def call_neuron(self, image_list: List[torch.Tensor])->Tuple[List[int], List[str]]:
         """
-        The function returns the neuron’s maximum activation value (in int format) over each of the images in the list as well as the activation map of the neuron over each of the images that highlights the regions of the image where the activations are higher (encoded into a Base64 string).
+        The function returns the neuron’s maximum activation value (in int format) for each of the images in the list as well as the original image (encoded into a Base64 string).
         
         Parameters
         ----------
@@ -134,24 +136,31 @@ class System:
         Returns
         -------
         Tuple[List[int], List[str]]
-            For each image in image_list returns the maximum activation value of the neuron on that image, and a masked images, 
-            with the region of the image that caused the high activation values highlighted (and the rest of the image is darkened). Each image is encoded into a Base64 string.
+            For each image in image_list returns the activation value of the neuron on that image, and the original image encoded into a Base64 string.
 
         
         Examples
         --------
         >>> # test the activation value of the neuron for the prompt "a dog standing on the grass"
-        >>> def execute_command(system, prompt_list) -> Tuple[int, str]:
-        >>>     prompt = ["a dog standing on the grass"]
-        >>>     image = text2image(prompt)
-        >>>     activation_list, activation_map_list = system.call_neuron(image)
-        >>>     return activation_list, activation_map_list
-        >>> # test the activation value of the neuron for the prompt “a fox and a rabbit watch a movie under a starry night sky” “a fox and a bear watch a movie under a starry night sky” “a fox and a rabbit watch a movie at sunrise”
-        >>> def execute_command(system.neuron, prompt_list) -> Tuple[int, str]:
-        >>>     prompt_list = [[“a fox and a rabbit watch a movie under a starry night sky”, “a fox and a bear watch a movie under a starry night sky”,“a fox and a rabbit watch a movie at sunrise”]]
-        >>>     images = text2image(prompt_list)
-        >>>     activation_list, activation_map_list = system.call_neuron(images)
-        >>>     return activation_list, activation_map_list
+        >>> prompt = ["a dog standing on the grass"]
+        >>> image = tools.text2image(prompt)
+        >>> activation_list, image_list = system.call_neuron(image)
+        >>> for activation, image in zip(activation_list, image_list):
+        >>>     tools.display(image, f"Activation: {activation}")
+        >>>
+        >>> # test the activation value of the neuron for the prompt "a dog standing on the grass" and maintain robustness to noise
+        >>> prompts = ["a dog standing on the grass"]*5
+        >>> images = tools.text2image(prompts)
+        >>> activation_list, image_list = system.call_neuron(images)
+        >>> tools.display(image_list[0], f"Activation: {statistics.mean(activation_list)}")
+        >>>
+        >>> # test the activation value of the neuron for the prompt "a dog standing on the grass" and the neuron activation value for the same image but with a lion instead of a dog
+        >>> prompt = ["a dog standing on the grass"]
+        >>> edits = ["replace the dog with a lion"]
+        >>> all_images, all_prompts = tools.edit_images(prompt, edits)
+        >>> activation_list, image_list = system.call_neuron(all_images)
+        >>> for activation, image in zip(activation_list, image_list):
+        >>>     tools.display(image, f"Activation: {activation}")
         """
         activation_list = []
         masked_images_list = []
@@ -348,7 +357,7 @@ class Tools:
 
     """
 
-    def __init__(self, path2save: str, device: str, DatasetExemplars: DatasetExemplars = None, images_per_prompt=10, text2image_model_name='sd', image2text_model_name='gpt-4o'):
+    def __init__(self, path2save: str, device: str, DatasetExemplars: DatasetExemplars = None, images_per_prompt=10, text2image_model_name='flux', p2p_model_name='instdiff', image2text_model_name='gpt-4o'):
         """
         Initializes the Tools object.
 
@@ -370,7 +379,7 @@ class Tools:
         self.text2image_model_name = text2image_model_name
         self.text2image_model = self._load_text2image_model(model_name=text2image_model_name)
         self.images_per_prompt = images_per_prompt
-        self.p2p_model_name = 'ip2p'
+        self.p2p_model_name = p2p_model_name
         self.p2p_model = self._load_pix2pix_model(model_name=self.p2p_model_name) # consider maybe adding options for other models like pix2pix zero
         self.path2save = path2save
         self.experiment_log = []
@@ -385,116 +394,128 @@ class Tools:
 
     def dataset_exemplars(self, unit_ids: List[int], system: System)->List[List[Tuple[float, str]]]:
         """
-        Retrieves the activations and exemplar images the specified units.
-
+        This method finds images from the ImageNet dataset that produce the highest activation values for a specific neuron.
+        It returns both the activation values and the corresponding exemplar images that were used to generate these activations.
+        This experiment is performed on real images and will provide a good approximation of the neuron behavior.
+        
         Parameters
         ----------
-        unit_ids : Union[List[int], int]
-            Unit ids to retrieve exemplars for.
         system : System
-            The system object containing the units to retrieve exemplars for.
+            The system representing the specific neuron and layer within the neural network.
+            The system should have 'layer' and 'neuron_num' attributes, so the dataset_exemplars function 
+            can return the exemplar activations and images for that specific neuron.
 
         Returns
         -------
-        List[List[Tuple[float, str]]]
-            For each unit, stores the maximum activations and masked images as a tuple.
+        List
+            For each exemplar image, stores a tuple containing two elements:
+            - The first element is the activation value for the specified neuron.
+            - The second element is the exemplar images (as Base64 encoded strings) corresponding to the activation.
 
         Example
         -------
-        >>> # Display the exemplars and activations for a list of units
-        >>> unit_ids = [0, 1]
-        >>> exemplar_data = tools.dataset_exemplars(unit_ids, system)
-        >>> for i in range(len(exemplar_data)):
-        >>>     tools.display(f"unit {unit_ids[i]}: ")
-        >>>     for activation, masked_image in exemplar_data[i]:
-        >>>         tools.display(masked_image, activation)
+        >>> exemplar_data = tools.dataset_exemplars(system)
+        >>> for activation, image in exemplar_data:
+        >>>    tools.display(image, f"Activation: {activation}")
         """
-        output = []
-        for unit_id in unit_ids:
-            unit = system.units[unit_id]
-            image_list = self.exemplars[unit.model_name][unit.layer][unit.neuron_num]
-            activation_list = self.exemplars_activations[unit.model_name][unit.layer][unit.neuron_num]
-            # Round activations to 4 decimal places
-            activation_list = [round(activation, 4) for activation in activation_list]
-            output.append(list(zip(activation_list, image_list)))
-        
-        return output
+        image_list = self.exemplars[system.layer][system.neuron_num]
+        activation_list = self.exemplars_activations[system.layer][system.neuron_num]
+        self.activation_threshold = sum(activation_list)/len(activation_list)
+        activation_list = (activation_list * 100).round()/100 
+        return list(zip(activation_list, image_list))
 
-    def edit_images(self, image_prompts : List[str], editing_prompts : List[str]):
+    def edit_images(self,
+                    base_images: List[str],
+                    editing_prompts: List[str]) -> Tuple[List[List[str]], List[str]]:
         """
-        Generate images from a list of prompts, then edits each image with the
-        corresponding editing prompt. Important note: Do not use negative
-        terminology such as "remove ...", try to use terminology like "replace
-        ... with ..." or "change the color of ... to" The function returns a
-        list of images and list of the relevant prompts.
+        Generates or uses provided base images, then edits each base image with a
+        corresponding editing prompt. Accepts either text prompts or Base64
+        encoded strings as sources for the base images.
+
+        The function returns a list containing lists of images (original and edited,
+        interleaved) in Base64 encoded string format, and a list of the relevant
+        prompts (original source string and editing prompt, interleaved).
 
         Parameters
         ----------
-        image_prompts : List[str]
-            A list of input ptompts to generate images according to, these
-            images are to be edited by the prompts in editing_prompts.
+        base_images : List[str]
+            A list of images as Base64 encoded strings. These images are to be 
+            edited by the prompts in editing_prompts.
         editing_prompts : List[str]
-            A list of instructions for how to edit the images in image_list.
-            Should be the same length as image_list.
+            A list of instructions for how to edit the base images derived from
+            `base_images`. Must be the same length as `base_images`.
 
         Returns
         -------
-        List[Image.Image], List[str]
-            A list of images and a list of all the prompts that
-            were used in the experiment, in the same order as the images
+        Tuple[List[List[str]], List[str]]
+            - all_images: A list where elements alternate between:
+                - A list of Base64 strings for the original image(s) from a source.
+                - A list of Base64 strings for the edited image(s) from that source.
+              Example: [[orig1_img1, orig1_img2], [edit1_img1, edit1_img2], [orig2_img1], [edit2_img1], ...]
+            - all_prompts: A list where elements alternate between:
+                - The original source string (text prompt or Base64) used.
+                - The editing prompt used.
+              Example: [source1, edit1, source2, edit2, ...]
+            The order in `all_images` corresponds to the order in `all_prompts`.
+
+        Raises
+        ------
+        ValueError
+            If the lengths of `base_images` and `editing_prompts` are not equal.
 
         Examples
         --------
-        >>> # test the units on the prompt "a dog standing on the grass" and
-        >>> # on the same image but with a cat instead of a dog
-        >>> prompt = ["a dog standing on the grass"]
-        >>> edits = ["replace the dog with a cat"]
-        >>> all_images, all_prompts = tools.edit_images(prompt, edits)
-        >>> unit_ids = [0, 1]
-        >>> unit_data = system.call_units(all_images, unit_ids)
-        >>>
-        >>> for i in range(len(all_images)):
-        >>>     tools.display(all_images[i], all_prompts[i])
-        >>>     for j in range(len(unit_data)):
-        >>>         activations, masked_images = unit_data[j]
-        >>>         tools.display(f"unit {j} masked image: ", masked_images[i])
-        >>>         tools.display(f"unit {j} activation: ", activations[i])
+        >>> # test the confidence score of the classifier for the prompt "a dog standing on the grass"
+        >>> # for the same image but with different actions instead of "standing":
+        >>> prompts = ["a landscape with a tree and a river"]*3
+        >>> original_images = tools.text2image(prompts)
+        >>> edits = ["make it autumn","make it spring","make it winter"]
+        >>> all_images, all_prompts = tools.edit_images(original_images, edits)
+        >>> score_list, image_list = system.call_classifier(all_images)
+        >>> for score, image, prompt in zip(score_list, image_list, all_prompts):
+        >>>     tools.display(image, f"Prompt: {prompt}\nConfidence Score: {score}")
         >>> 
-        >>> # test the activation value of unit 1 for the prompt "a dog standing on the grass"
-        >>> # and for different actions":
-        >>> prompts = ["a dog standing on the grass"]*3
-        >>> edits = ["make the dog sit","make the dog run","make the dog eat"]
-        >>> all_images, all_prompts = tools.edit_images(prompts, edits)
-        >>> unit_data = system.call_units(all_images, [1])
-        >>> activations, masked_images = unit_data[0]
-        >>> for i in range(len(all_images)):
-        >>>     tools.display(all_images[i], all_prompts[i])
-        >>>     tools.display(f"unit 1 masked image: ", masked_images[i])
-        >>>     tools.display(f"unit 1 activation: ", activations[i])
+        >>> # test the confidence score of the classifier on the highest scoring dataset exemplar
+        >>> # under different conditions        
+        >>> exemplar_data = tools.dataset_exemplars(system)
+        >>> highest_scoring_exemplar = exemplar_data[0][1]
+        >>> edits = ["make it night","make it daytime","make it snowing"]
+        >>> all_images, all_prompts = tools.edit_images([highest_scoring_exemplar]*len(edits), edits)
+        >>> score_list, image_list = system.call_classifier(all_images)
+        >>> for score, image, prompt in zip(score_list, image_list, all_prompts):
+        >>>     tools.display(image, f"Prompt: {prompt}\nConfidence Score: {score}")
         """
-        image_list = []
-        # Generate list of images from prompts
-        # TODO - Made to only work with one image
-        for prompt in image_prompts:
-            image_list.append(self._prompt2image(prompt, images_per_prompt=1))
-        # Filter out None values
-        image_list = [item for item in image_list if item is not None]
-        # If image is None, remove corresponding editing instruction
-        editing_prompts = [item for item, condition in zip(editing_prompts, image_list) if condition is not None]
-        image_prompts = [item for item, condition in zip(image_prompts, image_list) if condition is not None]
+        if len(base_images) != len(editing_prompts):
+            raise ValueError("Length of base_images and editing_prompts must be equal.")
 
-        # Generate list of edited images from editing instructions
-        edited_images = self.p2p_model(editing_prompts, image_list).images
-        # Merge into one list for both images and prompts
-        all_images= []
-        all_prompt = []
-        for i in range(len(image_prompts)):
-            all_prompt.append(image_prompts[i])
-            all_images.append(image_list[i])
-            all_prompt.append(editing_prompts[i])
-            all_images.append(edited_images[i])
-        
-        return all_images, all_prompt
+        edited_images_b64_lists = []
+        if isinstance(base_images[0], str):
+            base_images = [[img] for img in base_images]
+
+        base_imgs_obj = [str2image(img_b64[0]) for img_b64 in base_images]
+
+        for i in range(len(base_images)):
+            if self.p2p_model_name == "instdiff":
+                # Model returns a list of image objects
+                edited_imgs_obj = self.p2p_model([editing_prompts[i]], [base_imgs_obj[i]])
+            else:
+                # Model returns an object with an 'images' attribute (list of image objects)
+                result = self.p2p_model([editing_prompts[i]], [base_imgs_obj[i]])
+                edited_imgs_obj = result.images
+
+            edited_images_b64_lists.append([image2str(img_obj) for img_obj in edited_imgs_obj])
+
+        # Interleave results
+        all_images = []
+        all_prompts = []
+        for i in range(len(base_images)):
+            all_images.append(base_images[i])
+            all_prompts.append("Original Image")
+
+            all_images.append(edited_images_b64_lists[i])
+            all_prompts.append(f"Editing Prompt: {editing_prompts[i]}")
+
+        return all_images, all_prompts
 
     def text2image(self, prompt_list: List[str]) -> List[torch.Tensor]:
         """Gets a list of text prompt as an input, generates an image for each prompt in the list using a text to image model.
@@ -561,8 +582,9 @@ class Tools:
         Non-semantic Concepts (Shape, texture, color, etc.): ...
         Semantic Concepts (Objects, animals, people, scenes, etc): ...
         """
+        image_list = self._description_helper(image_list)
         instructions = '''
-        What do all the unmasked regions of these images have in common? Make
+        What do all of these images have in common? Make
         sure you consider several types of concepts like color, shape, texture,
         etc. There might be more then one common concept, or a few groups of
         images with different common concept each. In these cases return all of
@@ -571,11 +593,7 @@ class Tools:
         '''
         history = [{'role': 'system', 
                     'content': 
-                        '''You are a helpful assistant who views/compares
-                        partially or fully masked images. The masked regions
-                        will be slightly darkened. 
-                        Only look at the unmasked regions, don't consider the
-                        masked regions in your response.'''}]
+                        'You are a helpful assistant who views/compares images.'}]
         user_content = [{"type":"text", "text": instructions}]
         for ind,image in enumerate(image_list):
             user_content.append(format_api_content("image_url", image))
@@ -639,8 +657,9 @@ class Tools:
         >>> tools.display(*descriptions)
         """
         description_list = ''
-        instructions = "Do not describe the full image. Please describe ONLY the unmasked regions in this image (e.g. the regions that are not darkened). Be as concise as possible. Return your description in the following format: [highlighted regions]: <your concise description>"
+        instructions = "Please describe the image as concisely as possible. Return your description in the following format: [Description]: <your concise description>"
         time.sleep(60)
+        image_list = self._description_helper(image_list)
         for ind,image in enumerate(image_list):
             history = [{'role':'system', 
                         'content':'you are an helpful assistant'},
@@ -654,8 +673,17 @@ class Tools:
             description = " ".join([f'"{image_title[ind]}", highlighted regions:',description])
             description_list += description + '\n'
         return description_list
+
+    def _description_helper(self, *args: Union[str, Image.Image]):
+        '''Helper function for display to recursively handle iterable arguments.'''
+        output = []
+        for item in args:
+            if isinstance(item, (list, tuple)):
+                output.extend(self._description_helper(*item))
+            else:
+                output.append(item)
+        return output
     
-    # TODO - Document new style
     def display(self, *args: Union[str, Image.Image]):
         """
         Displays a series of images and/or text in the chat, similar to a Jupyter notebook.
@@ -750,10 +778,12 @@ class Tools:
             # Set progress bar to quiet mode
             pipe.set_progress_bar_config(disable=True)
             return pipe
+        elif model_name == "instdiff":
+            model = InstructDiffusion(batch_size=1, config_path="utils/InstructDiffusion/configs/instruct_diffusion.yaml", model_path="utils/InstructDiffusion/checkpoints/v1-5-pruned-emaonly-adaption-task.ckpt", device=self.device)
+            return model
         else:
             raise("unrecognized pix2pix model name")
 
-    
     def _load_text2image_model(self,model_name):
         """
         Loads a text-to-image model.
@@ -773,10 +803,8 @@ class Tools:
             sdpipe = StableDiffusionPipeline.from_pretrained(model_id, torch_dtype=torch.float16)
             sdpipe = sdpipe.to(device)
 
-            # TODO - Testing, then add to others or remove
             # Set progress bar to quiet mode
             sdpipe.set_progress_bar_config(disable=True)
-
             return sdpipe
         elif model_name == "sdxl-turbo":
             device = self.device
@@ -787,6 +815,9 @@ class Tools:
         elif model_name == "dalle":
             pipe = None
             return pipe
+        elif model_name == "flux":
+            print(f"Loading Flux Image Generator...")
+            return FluxImageGenerator(device=self.device)
         else:
             raise("unrecognized text to image model name")
     
@@ -794,13 +825,24 @@ class Tools:
         if images_per_prompt == None: 
             images_per_prompt = self.images_per_prompt
         if self.text2image_model_name == "sd":
-            # Just generate one image
-            image = self._generate_safe_images([prompt])[0]
+            prompts = [prompt] * images_per_prompt
+            # images = self._generate_safe_images(prompts)
+            images = []
+            for prompt in prompts:
+                images.append(self.text2image_model(prompt).images[0])
+        elif self.text2image_model_name == "flux":
+            prompts = [prompt] * images_per_prompt
+            # images = self._generate_safe_images(prompts)
+            images = []
+            for prompt in prompts:
+                images.append(self.text2image_model(prompt))
+            
         elif self.text2image_model_name == "dalle":
             if images_per_prompt > 1:
                 raise("cannot use DALLE with 'images_per_prompt'>1 due to rate limits")
             else:
                 try:
+                    prompt = "a photo-realistic image of " + prompt
                     response = openai.Image.create(prompt=prompt, 
                                                    model="dall-e-3",
                                                    n=1, 
@@ -809,11 +851,11 @@ class Tools:
                                                    response_format="b64_json"
                                                    )
                     image = response.data[0].b64_json
-                    image = str2image(image)
+                    images = [str2image(image)]
                 except Exception as e:
                     raise(e)
-        image = image.resize((self.im_size, self.im_size))
-        return image
+        images = [im.resize((self.im_size, self.im_size)) for im in images]
+        return [image2str(im) for im in images]
 
     def _generate_safe_images(self, prompts: List[str], max_attempts:int = 10):
         results = []
@@ -835,7 +877,7 @@ class Tools:
         
         raise Exception(f"Prompt '{prompt}': Failed to generate a safe image after {max_attempts} attempts")
     
-    def generate_html(self,name="experiment", line_length=100):
+    def generate_html(self, path2save, name="experiment", line_length=100):
         # Generates an HTML file with the experiment log.
         html_string = f'''<html>
         <head>
@@ -848,7 +890,7 @@ class Tools:
         <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/components/prism-python.min.js"></script>
         </head> 
         <body>
-        <h1>{self.path2save}</h1>'''
+        <h1>{path2save}</h1>'''
 
         # don't plot system+user prompts (uncomment if you want the html to include the system+user prompts)
         '''
@@ -868,7 +910,6 @@ class Tools:
         html_string += f"<p>Activations:</p>"
         html_string += initial_activations
         '''
-
         for entry in self.experiment_log:      
             if entry['role'] == 'assistant':
                 html_string += f"<h2>MAIA</h2>"  
@@ -888,5 +929,6 @@ class Tools:
         html_string += '</body></html>'
 
         # Save
-        with open(self.html_path, "w") as file:
+        file_path = os.path.join(path2save, f"{name}.html")
+        with open(file_path, "w", encoding="utf-8") as file:
             file.write(html_string)
