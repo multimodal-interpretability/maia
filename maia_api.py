@@ -1,4 +1,5 @@
 # Standard library imports
+import numpy as np
 import math
 import os
 import time
@@ -169,6 +170,7 @@ class System:
                 activation_list.append(None)
                 masked_images_list.append(None)
             else:
+                image = str2image(image)
                 if self.layer == 'last':
                     tensor = self._preprocess_images(image)
                     acts, image_class = self._calc_class(tensor)    
@@ -400,8 +402,6 @@ class Tools:
         The name of the text-to-image model.
     text2image_model : any
         The loaded text-to-image model.
-    images_per_prompt : int
-        Number of images to generate per prompt.
     path2save : str
         Path for saving output images.
     threshold : any
@@ -442,7 +442,7 @@ class Tools:
 
     """
 
-    def __init__(self, path2save: str, device: str, DatasetExemplars: DatasetExemplars = None, images_per_prompt=10, text2image_model_name='flux', p2p_model_name='instdiff', image2text_model_name='gpt-4o'):
+    def __init__(self, path2save: str, device: str, DatasetExemplars: DatasetExemplars = None, text2image_model_name='flux', p2p_model_name='instdiff', image2text_model_name='gpt-4o'):
         """
         Initializes the Tools object.
 
@@ -454,8 +454,6 @@ class Tools:
             The computational device ('cpu' or 'cuda').
         DatasetExemplars : object
             an object from the class DatasetExemplars
-        images_per_prompt : int
-            Number of images to generate per prompt.
         text2image_model_name : str
             The name of the text-to-image model.
         """
@@ -463,7 +461,6 @@ class Tools:
         self.image2text_model_name = image2text_model_name
         self.text2image_model_name = text2image_model_name
         self.text2image_model = self._load_text2image_model(model_name=text2image_model_name)
-        self.images_per_prompt = images_per_prompt
         self.p2p_model_name = p2p_model_name
         self.p2p_model = self._load_pix2pix_model(model_name=self.p2p_model_name) # consider maybe adding options for other models like pix2pix zero
         self.path2save = path2save
@@ -511,7 +508,7 @@ class Tools:
 
     def edit_images(self,
                     base_images: List[str],
-                    editing_prompts: List[str]) -> Tuple[List[List[str]], List[str]]:
+                    editing_prompts: List[str]) -> Tuple[List[str], List[str]]:
         """
         Generates or uses provided base images, then edits each base image with a
         corresponding editing prompt. Accepts either text prompts or Base64
@@ -532,11 +529,11 @@ class Tools:
 
         Returns
         -------
-        Tuple[List[List[str]], List[str]]
+        Tuple[List[str], List[str]]
             - all_images: A list where elements alternate between:
-                - A list of Base64 strings for the original image(s) from a source.
-                - A list of Base64 strings for the edited image(s) from that source.
-              Example: [[orig1_img1, orig1_img2], [edit1_img1, edit1_img2], [orig2_img1], [edit2_img1], ...]
+                - A Base64 string for the original image from a source.
+                - A Base64 string for the edited image from that source.
+              Example: [orig1_img1, edit1_img1, orig2_img1, edit2_img1, ...]
             - all_prompts: A list where elements alternate between:
                 - The original source string (text prompt or Base64) used.
                 - The editing prompt used.
@@ -574,10 +571,7 @@ class Tools:
             raise ValueError("Length of base_images and editing_prompts must be equal.")
 
         edited_images_b64_lists = []
-        if isinstance(base_images[0], str):
-            base_images = [[img] for img in base_images]
-
-        base_imgs_obj = [str2image(img_b64[0]) for img_b64 in base_images]
+        base_imgs_obj = [str2image(img_b64) for img_b64 in base_images]
 
         for i in range(len(base_images)):
             if self.p2p_model_name == "instdiff":
@@ -587,8 +581,7 @@ class Tools:
                 # Model returns an object with an 'images' attribute (list of image objects)
                 result = self.p2p_model([editing_prompts[i]], [base_imgs_obj[i]])
                 edited_imgs_obj = result.images
-
-            edited_images_b64_lists.append([image2str(img_obj) for img_obj in edited_imgs_obj])
+            edited_images_b64_lists.append(image2str(edited_imgs_obj[0]))
 
         # Interleave results
         all_images = []
@@ -628,8 +621,8 @@ class Tools:
         """
         image_list = [] 
         for prompt in prompt_list:
-            images = self._prompt2image(prompt)
-            image_list.append(images)
+            image = self._prompt2image(prompt)
+            image_list.append(image)
         return image_list
     
  
@@ -668,14 +661,7 @@ class Tools:
         Semantic Concepts (Objects, animals, people, scenes, etc): ...
         """
         image_list = self._description_helper(image_list)
-        instructions = '''
-        What do all of these images have in common? Make
-        sure you consider several types of concepts like color, shape, texture,
-        etc. There might be more then one common concept, or a few groups of
-        images with different common concept each. In these cases return all of
-        the concepts. Return your description in the following format: [COMMON]:
-        <your description>."
-        '''
+        instructions = "What do all the unmasked regions of these images have in common? There might be more then one common concept, or a few groups of images with different common concept each. In these cases return all of the concepts.. Return your description in the following format: [COMMON]: <your description>."
         history = [{'role': 'system', 
                     'content': 
                         'You are a helpful assistant who views/compares images.'}]
@@ -742,8 +728,7 @@ class Tools:
         >>> tools.display(*descriptions)
         """
         description_list = ''
-        instructions = "Please describe the image as concisely as possible. Return your description in the following format: [Description]: <your concise description>"
-        time.sleep(60)
+        instructions = "Do not describe the full image. Please describe ONLY the unmasked regions in this image (e.g. the regions that are not darkened). Be as concise as possible. Return your description in the following format: [HIGHLIGHTED REGIONS]: <your concise description>"
         image_list = self._description_helper(image_list)
         for ind,image in enumerate(image_list):
             history = [{'role':'system', 
@@ -754,8 +739,8 @@ class Tools:
                            format_api_content("image_url", image)]}]
             description = ask_agent(self.image2text_model_name,history)
             if isinstance(description, Exception): return description_list
-            description = description.split("[highlighted regions]:")[-1]
-            description = " ".join([f'"{image_title[ind]}", highlighted regions:',description])
+            description = description.split("[HIGHLIGHTED REGIONS]:")[-1]
+            description = " ".join([f'"{image_title[ind]}", HIGHLIGHTED REGIONS:',description])
             description_list += description + '\n'
         return description_list
 
@@ -906,41 +891,28 @@ class Tools:
         else:
             raise("unrecognized text to image model name")
     
-    def _prompt2image(self, prompt, images_per_prompt=None):
-        if images_per_prompt == None: 
-            images_per_prompt = self.images_per_prompt
+    def _prompt2image(self, prompt):
         if self.text2image_model_name == "sd":
-            prompts = [prompt] * images_per_prompt
-            # images = self._generate_safe_images(prompts)
-            images = []
-            for prompt in prompts:
-                images.append(self.text2image_model(prompt).images[0])
+            image = self.text2image_model(prompt).images[0]
         elif self.text2image_model_name == "flux":
-            prompts = [prompt] * images_per_prompt
-            # images = self._generate_safe_images(prompts)
-            images = []
-            for prompt in prompts:
-                images.append(self.text2image_model(prompt))
+            image = self.text2image_model(prompt)
             
         elif self.text2image_model_name == "dalle":
-            if images_per_prompt > 1:
-                raise("cannot use DALLE with 'images_per_prompt'>1 due to rate limits")
-            else:
-                try:
-                    prompt = "a photo-realistic image of " + prompt
-                    response = openai.Image.create(prompt=prompt, 
-                                                   model="dall-e-3",
-                                                   n=1, 
-                                                   size="1024x1024",
-                                                   quality="hd",
-                                                   response_format="b64_json"
-                                                   )
-                    image = response.data[0].b64_json
-                    images = [str2image(image)]
-                except Exception as e:
-                    raise(e)
-        images = [im.resize((self.im_size, self.im_size)) for im in images]
-        return [image2str(im) for im in images]
+            try:
+                prompt = "a photo-realistic image of " + prompt
+                response = openai.Image.create(prompt=prompt, 
+                                            model="dall-e-3",
+                                            n=1, 
+                                            size="1024x1024",
+                                            quality="hd",
+                                            response_format="b64_json"
+                                            )
+                image = response.data[0].b64_json
+                image = str2image(image)
+            except Exception as e:
+                raise(e)
+        image = image.resize((self.im_size, self.im_size))
+        return image2str(image)
 
     def _generate_safe_images(self, prompts: List[str], max_attempts:int = 10):
         results = []
