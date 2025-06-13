@@ -1,6 +1,7 @@
 '''Utils for the main.py file'''
 import os
 import json
+from utils.api_utils import str2image
 
 # return the prompt according to the task
 def return_prompt(prompt_path,setting='unit_description'):
@@ -73,3 +74,15 @@ def generate_numbered_path(path:str, file_extension:str=""):
         i += 1
         numbered_path = path + "_" + str(i) + file_extension
     return numbered_path
+
+def plot_results_notebook(experiment_log):
+    for entry in experiment_log:
+        if (entry['role'] == 'assistant'):
+            print('\n\n*** MAIA: ***\n\n')  
+        else: 
+            print('\n\n*** Experiment Execution: ***\n\n')
+        for item in entry['content']:
+            if item['type'] == 'text':
+                print(item['text'])
+            elif item['type'] == 'image_url':
+                display(str2image(item['image_url']['url'].split(',')[1]))
