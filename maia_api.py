@@ -27,7 +27,6 @@ import clip
 from utils.call_agent import ask_agent
 from utils.api_utils import is_base64, format_api_content, generate_masked_image, image2str, str2image, Unit, ModelInfoWrapper
 from utils.DatasetExemplars import DatasetExemplars
-from utils.main_utils import generate_numbered_path
 
 # New imports
 from utils.instdiff import InstructDiffusion
@@ -472,7 +471,6 @@ class Tools:
             self.exempalrs_thresholds = DatasetExemplars.thresholds
         self.activation_threshold = 0
         self.results_list = []
-        self.html_path = generate_numbered_path(os.path.join(path2save, "experiment"), ".html")
 
     def dataset_exemplars(self, system: System)->List[List[Tuple[float, str]]]:
         """
