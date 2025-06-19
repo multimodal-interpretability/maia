@@ -8,43 +8,35 @@
   git submodule update
   ```
 
-2. **Follow the setup instructions on Grounded-SAM setup:**
+2. **Follow the setup instructions on Grounded SAM setup:**
    - Export global variables (choose whether to run on CPU or GPU; note that running on CPU is feasible but slower, approximately 3 seconds per image):
+
      ```bash
-     export AM_I_DOCKER=False
-     export BUILD_WITH_CUDA=True
-     export CUDA_HOME=/path/to/cuda-11.3/
+     export AM_I_DOCKER="False"
+     export BUILD_WITH_CUDA="True"
+     export CUDA_HOME=$(dirname "$(dirname "$(which nvcc)")")
+     export CC=$(which gcc-12)
+     export CXX=$(which g++-12)
      ```
    - Install Segment Anything:
      ```bash
-     python -m pip install -e segment_anything
+     pip install git+https://github.com/facebookresearch/segment-anything.git
      ```
    - Install Grounding Dino:
      ```bash
-     python -m pip install -e GroundingDINO
-     ```
-   - Install diffusers:
-     ```bash
-     pip install --upgrade diffusers[torch]
-     ```
-   - Install osx:
-     ```bash
-     git submodule update --init --recursive
-     cd grounded-sam-osx && bash install.sh
+     pip install git+https://github.com/IDEA-Research/GroundingDINO.git
      ```
      
-3. **Download grounded DINO and grounded SAM .pth files**  
-   - Download groudned DINO: 
+3. **Download Grounding DINO and Grounded SAM .pth files**  
+   - Download Grounding DINO: 
      ```bash
-     cd .. #back to ./Grounded_Segment-Anything
-     #download the pretrained groundingdino-swin-tiny model
-     wget https://github.com/IDEA-Research/GroundingDINO/releases/download/v0.1.0-alpha/groundingdino_swint_ogc.pth
+     wget "https://github.com/IDEA-Research/GroundingDINO/releases/download/v0.1.0-alpha/groundingdino_swint_ogc.pth"
      ```
-   - Download grounded SAM: 
+   - Download Grounded SAM: 
      ```bash
      wget https://dl.fbaipublicfiles.com/segment_anything/sam_vit_h_4b8939.pth
      ```
-    - Try running grounded SAM demo:
+    - Try running Grounded SAM demo:
       ```bash
       export CUDA_VISIBLE_DEVICES=0
       python grounded_sam_demo.py \

@@ -21,11 +21,30 @@ MAIA is a system that uses neural models to automate neural model understanding 
 
 
 ### Installations ###
-clone this repo and install all requirements:
+clone this repo and create a conda environment:
 ```bash
 git clone https://github.com/multimodal-interpretability/maia.git
 cd maia
-bash setup_env.sh
+conda create -n maia python=3.10 --file conda_packages.txt -c nvidia
+conda activate maia
+```
+
+install packages and dependencies
+```bash
+pip install -r torch_requirements.txt
+pip install -r requirements.txt
+pip install -r torch_requirements.txt --force-reinstall
+pip install git+https://github.com/huggingface/transformers.git
+```
+
+install Instdiff and Flux
+```bash
+cd utils
+git clone https://github.com/cientgu/InstructDiffusion.git
+pip install -r requirements_instdiff_flux.txt
+cd InstructDiffusion
+bash scripts/download_pretrained_instructdiffusion.sh
+cd ../../
 ```
 
 download [net-dissect](https://netdissect.csail.mit.edu/) precomputed exemplars:
@@ -92,5 +111,3 @@ You can also use the .json file to run all synthetic neurons (or specify your ow
 ```bash
 python main.py --model synthetic_neurons --unit_mode from_file --unit_file_path ./neuron_indices/
 ```
-### Acknowledgment ###
-[Christy Li](https://www.linkedin.com/in/christykl/) helped with cleaning up the synthetic neurons code for release.
