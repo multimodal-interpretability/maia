@@ -71,12 +71,13 @@ NEW: `demo.ipynb` now supports synthetic neurons. Follow installation instructio
 ### Batch experimentation ###
 To run a batch of experiments, use ```main.py```:
 
-#### Load openai api key ####
-(in case you don't have an openai api-key, you can get one by following the instructions [here](https://platform.openai.com/docs/quickstart)).
+#### Load OpenAI or Anthropic API key ####
+(you can get an OpenAI API key by following the instructions [here](https://platform.openai.com/docs/quickstart) and an Anthropic API key by following the instructions [here](https://docs.anthropic.com/en/docs/get-started)).
 
-Set your api-key as an environment variable (this is a bash command, look [here](https://platform.openai.com/docs/quickstart) for other OS)
+Set your API key as an environment variable
 ```bash
-export OPENAI_API_KEY='your-api-key-here'
+export OPENAI_API_KEY='your-openai-api-key-here'
+export ANTHROPIC_API_KEY='your-anthropic-api-key-here'
 ```
 
 #### Run MAIA ####
