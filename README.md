@@ -16,6 +16,8 @@ MAIA is a system that uses neural models to automate neural model understanding 
 [July 3]: We release MAIA implementation code for neuron labeling 
 \
 [August 14]: Synthetic neurons are now available (both in `demo.ipynb` and in `main.py`)
+\
+[June 19]: Added support for Claude 3.5 Sonnet, GPT-4o, and GPT-4 Turbo as backbones for MAIA, Flux for image generation, and InstructDiffusion for image editing. Additionally, MAIA's code execution now runs free-form blocks of code, and it calls a flexible display tool to show the results in the experiment log. 
 
 **This repo is under active development. Sign up for updates by email using [this google form](https://forms.gle/Zs92DHbs3Y3QGjXG6).**
 
@@ -37,7 +39,7 @@ pip install -r torch_requirements.txt --force-reinstall
 pip install git+https://github.com/huggingface/transformers.git
 ```
 
-install Instdiff and Flux
+install InstructDiffusion and Flux
 ```bash
 cd utils
 git clone https://github.com/cientgu/InstructDiffusion.git
@@ -80,6 +82,14 @@ export OPENAI_API_KEY='your-openai-api-key-here'
 export ANTHROPIC_API_KEY='your-anthropic-api-key-here'
 ```
 
+#### Load Huggingface key ####
+You will need a Huggingface API key if you want to use Stable Diffusion 3.5 as the text2image model (you can get a HuggingFace API key by following the instructions [here](https://huggingface.co/stabilityai/stable-diffusion-3.5-medium)).
+
+Set your API key as an environment variable
+```bash
+export HF_TOKEN='your-hf-token-here'
+```
+
 #### Run MAIA ####
 Manually specify the model and desired units in the format ```layer#1=unit#1,unit#2... : layer#1=unit#1,unit#2...``` by calling e.g.:
 ```bash
@@ -112,3 +122,67 @@ You can also use the .json file to run all synthetic neurons (or specify your ow
 ```bash
 python main.py --model synthetic_neurons --unit_mode from_file --unit_file_path ./neuron_indices/
 ```
+
+### To set up the synthetic neurons:
+
+1. **init Grounded-SAM submodule**  
+  ```
+  git submodule init
+  git submodule update
+  ```
+
+2. **Follow the setup instructions on Grounded SAM setup:**
+   - Export global variables (choose whether to run on CPU or GPU; note that running on CPU is feasible but slower, approximately 3 seconds per image):
+
+     ```bash
+     export AM_I_DOCKER="False"
+     export BUILD_WITH_CUDA="True"
+     export CUDA_HOME=$(dirname "$(dirname "$(which nvcc)")")
+     export CC=$(which gcc-12)
+     export CXX=$(which g++-12)
+     ```
+   - Install Segment Anything:
+     ```bash
+     pip install git+https://github.com/facebookresearch/segment-anything.git
+     ```
+   - Install Grounding Dino:
+     ```bash
+     pip install git+https://github.com/IDEA-Research/GroundingDINO.git
+     ```
+     
+3. **Download Grounding DINO and Grounded SAM .pth files**  
+   - Download Grounding DINO: 
+     ```bash
+     wget "https://github.com/IDEA-Research/GroundingDINO/releases/download/v0.1.0-alpha/groundingdino_swint_ogc.pth"
+     ```
+   - Download Grounded SAM: 
+     ```bash
+     wget https://dl.fbaipublicfiles.com/segment_anything/sam_vit_h_4b8939.pth
+     ```
+    - Try running Grounded SAM demo:
+      ```bash
+      export CUDA_VISIBLE_DEVICES=0
+      python grounded_sam_demo.py \
+        --config GroundingDINO/groundingdino/config/GroundingDINO_SwinT_OGC.py \
+        --grounded_checkpoint groundingdino_swint_ogc.pth \
+        --sam_checkpoint sam_vit_h_4b8939.pth \
+        --input_image assets/demo1.jpg \
+        --output_dir "outputs" \
+        --box_threshold 0.3 \
+        --text_threshold 0.25 \
+        --text_prompt "bear" \
+        --device "cpu"
+      ```
+
+#### Creating Custom Synthetic-Neurons
+
+1. Decide the mode and label(s) for your neuron.
+    1. ex. Cheese OR Lemon
+2. Identify an object-classification dataset you want to create exemplars from. The example notebooks use COCO.
+3. Query the dataset for relevant images to your synthetic neuron
+    1. i.e. if you want to build a neuron that’s selective for dogs (monosemantic neuron), query the dataset for dog images
+    2. If you want to build a neuron that’s selective for dogs but only if they’re wearing collars (and neuron), query the dataset for dogs wearing collars
+4. Instantiate synthetic neuron with desired setting and labels
+5. Run SAMNeuron on all candidate images and save the top 15 highest activating images and their activations
+6. Save the data in the format “path2data/label” or for multi-label neurons “path2data/label1_label2”
+7. Convert the saved data to the format expected by MAIA, demonstrated [here](synthetic-neurons-dataset/create_synthetic_neurons.ipynb)

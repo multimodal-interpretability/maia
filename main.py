@@ -27,7 +27,7 @@ layers = {
 
 def call_argparse():
     parser = argparse.ArgumentParser(description='Process Arguments')	
-    parser.add_argument('--maia', type=str, default='claude', choices=['claude','gpt-4-vision-preview','gpt-4-turbo'], help='maia agent name')	
+    parser.add_argument('--maia', type=str, default='claude', choices=['claude','gpt-4o','gpt-4-turbo'], help='maia agent name')	
     parser.add_argument('--task', type=str, default='neuron_description', choices=['neuron_description'], help='task to solve, default is neuron description')
     parser.add_argument('--model', type=str, default='resnet152', choices=['resnet152','clip-RN50','dino_vits8','synthetic_neurons'], help='model to interp')
     parser.add_argument('--units', type=str2dict, default='layer4=122', help='units to interp')	
