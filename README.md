@@ -249,5 +249,5 @@ Finally, move the computed exemplars to the `exemplars/` folder.
 7. Convert the saved data to the format expected by MAIA, demonstrated [here](synthetic-neurons-dataset/create_synthetic_neurons.ipynb)
 
 ### Acknowledgment ###
-[Christy Li]([https://www.linkedin.com/in/christykl/](https://christykl.github.io/)) and [Jake Touchet](https://www.linkedin.com/in/jake-touchet-557329297/) contributed to MAIA 2.0 release.
-[Christy Li]([https://www.linkedin.com/in/christykl/](https://christykl.github.io/)) helped with cleaning up the synthetic neurons code for release.
+[Christy Li]([https://www.linkedin.com/in/christykl/](https://christykl.github.io/) and [Jake Touchet](https://www.linkedin.com/in/jake-touchet-557329297/) contributed to MAIA 2.0 release.
+[Christy Li]([https://www.linkedin.com/in/christykl/](https://christykl.github.io/) helped with cleaning up the synthetic neurons code for release.
