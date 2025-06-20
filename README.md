@@ -13,11 +13,11 @@ MAIA is a system that uses neural models to automate neural model understanding 
 
 **News** 
 \
-[July 3]: We release MAIA implementation code for neuron labeling 
+[June 19 2025]: Releasing MAIA 2.0: added support for Claude 3.5 Sonnet, GPT-4o, and GPT-4 Turbo as backbones for MAIA, Flux for image generation, and InstructDiffusion for image editing. Additionally, MAIA's code execution now runs free-form blocks of code, and it calls a flexible display tool to show the results in the experiment log. 
 \
-[August 14]: Synthetic neurons are now available (both in `demo.ipynb` and in `main.py`)
+[August 14 2024]: Synthetic neurons are now available (both in `demo.ipynb` and in `main.py`)
 \
-[June 19]: Added support for Claude 3.5 Sonnet, GPT-4o, and GPT-4 Turbo as backbones for MAIA, Flux for image generation, and InstructDiffusion for image editing. Additionally, MAIA's code execution now runs free-form blocks of code, and it calls a flexible display tool to show the results in the experiment log. 
+[July 3 2024]: We release MAIA implementation code for neuron labeling 
 
 **This repo is under active development. Sign up for updates by email using [this google form](https://forms.gle/Zs92DHbs3Y3QGjXG6).**
 
