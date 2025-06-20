@@ -13,7 +13,7 @@ MAIA is a system that uses neural models to automate neural model understanding 
 
 **News** 
 \
-[June 19 2025]: Releasing MAIA 2.0: added support for Claude 3.5 Sonnet, GPT-4o, and GPT-4 Turbo as backbones for MAIA, Flux for image generation, and InstructDiffusion for image editing. Additionally, MAIA's code execution now runs free-form blocks of code, and it calls a flexible display tool to show the results in the experiment log. 
+[June 19 2025]: Releasing MAIA 2.0: MAIA's code execution now runs free-form blocks of code, and it calls a flexible display tool to show the results in the experiment log. Additionally, added support for Claude 3.5 Sonnet, GPT-4o, and GPT-4 Turbo as backbones for MAIA backbone, Flux for image generation, and InstructDiffusion for image editing. 
 \
 [August 14 2024]: Synthetic neurons are now available (both in `demo.ipynb` and in `main.py`)
 \
@@ -247,3 +247,7 @@ Finally, move the computed exemplars to the `exemplars/` folder.
 5. Run SAMNeuron on all candidate images and save the top 15 highest activating images and their activations
 6. Save the data in the format “path2data/label” or for multi-label neurons “path2data/label1_label2”
 7. Convert the saved data to the format expected by MAIA, demonstrated [here](synthetic-neurons-dataset/create_synthetic_neurons.ipynb)
+
+### Acknowledgment ###
+[Christy Li]([https://www.linkedin.com/in/christykl/](https://christykl.github.io/)) and [Jake Touchet](https://www.linkedin.com/in/jake-touchet-557329297/) contributed to MAIA 2.0 release.
+[Christy Li]([https://www.linkedin.com/in/christykl/](https://christykl.github.io/)) helped with cleaning up the synthetic neurons code for release.
