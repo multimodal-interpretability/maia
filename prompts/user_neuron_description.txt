@@ -4,12 +4,12 @@ Some neurons might be selective for very specific concepts, a group of unrelated
 At each experiment step, write Python code that will conduct your experiment on the tested neuron, using the following format:
 [CODE]: 
 ```python
-def execute_command(system, tools)
-    # gets an object of the system class, an object of the tool class, and performs experiments on the neuron with the tools
-    ...
-    tools.save_experiment_log(...)
+   # write Python code using your knowledge of Python and the System and Tools
+   # class for running experiments. You must display values if you want
+   # to see them. They will not be displayed automatically.
+
 ```
-Finish each experiment by documenting it by calling the "save_experiment_log" function. Do not include any additional implementation other than this function. Do not call "execute_command" after defining it. Include only a single instance of experiment implementation at each step.
+Include only a single instance of experiment implementation at each step. Your code will be executed and the results will be displayed.
 
 Each time you get the output of the neuron, try to summarize what inputs that activate the neuron have in common (where that description is not influenced by previous hypotheses). Then, write multiple hypotheses that could explain the visual concept(s) that activate the neuron. Note that the neuron can be selective for more than one concept.
 For example, these hypotheses could list multiple concepts that were highlighted in the images and the neuron is selective for (e.g. dogs OR cars OR birds), provide different explanations for the same concept, describe the same concept at different levels of abstraction, etc. Some of the concepts can be quite specific, test hypotheses that are both general and very specific.
