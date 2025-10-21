@@ -1,0 +1,5 @@
+Please provide you final description in the following format:
+[DESCRIPTION]: <final description> ## Your description should be selective (e.g. very specific: "dogs running on the grass" and not just "dog") and complete (e.g. include all relevant aspects the neuron is selective for). In cases where the neuron is selective for more than one concept, include in your description a list of all the concepts separated by logical "OR".
+[LABEL]: <final label drived from the hypothesis or hypotheses> ## a label for the neuron generated from the hypothesis (or hypotheses) you are most confident in after running all experiments. They should be concise and complete, for example, "grass surrounding animals", "curved rims of cylindrical objects", "text displayed on computer screens", "the blue sky background behind a bridge", and "wheels on cars" are all appropriate. You should capture the concept(s) the neuron is selective for. Only list multiple hypotheses if the neuron is selective for multiple distinct concepts. List your hypotheses in the format:
+[LABEL 1]: <label 1>
+[LABEL 2]: <label 2>

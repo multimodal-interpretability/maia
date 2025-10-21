@@ -1,0 +1,128 @@
+[project]
+name = "maia"
+version = "0.1.0"
+description = "MAIA multi-modal project"
+authors = [{ name = "You", email = "you@example.com" }]
+requires-python = ">=3.9"
+
+dependencies = [
+    # ── PyTorch + CUDA ─────────────────────────────────────────────
+    "torch==2.5.1+cu121",
+    "torchvision==0.20.1+cu121",
+    "torchaudio==2.5.1+cu121",
+    "triton",                    # optimiser back-end
+    "torchgeometry==0.1.2",
+
+    # ── Generative-AI / HF stack ──────────────────────────────────
+    "diffusers @ git+https://github.com/huggingface/diffusers.git",
+    "transformers @ git+https://github.com/huggingface/transformers.git",
+    "accelerate",
+    "gguf",
+    "bitsandbytes",
+    "huggingface-hub",
+    "k-diffusion @ git+https://github.com/crowsonkb/k-diffusion.git",
+    "baukit @ git+https://github.com/davidbau/baukit@9d51abd51ebf29769aecc38c4cbef459b731a36e",
+
+    # ── Vision & imaging ──────────────────────────────────────────
+    "chumpy",
+    "clip @ git+https://github.com/openai/CLIP.git",
+    "kornia>=0.6",
+    "mmpose==1.3.2",
+    "open3d==0.19.0",
+    "opencv-python==4.11.0.86",
+    "opencv-python-headless==4.11.0.86",
+    "pillow>=11.1",
+    "pycocotools==2.0.8",
+    "pycocoevalcap==1.2",
+    "pyrender==0.1.45",
+    "scikit-image==0.25.2",
+    "smplx==0.1.28",
+    "supervision==0.25.1",
+    "taming-transformers @ git+https://github.com/CompVis/taming-transformers.git@master",
+    "taming-transformers-rom1504",
+    "timm",
+    "trimesh==4.6.4",
+    "xformers==0.0.29",
+    "xtcocotools==1.14.3",
+    "imageio>=2.37.0",
+    "imageio-ffmpeg>=0.4.2",
+    "uniface",
+
+    # ── Core scientific / numeric ─────────────────────────────────
+    "albumentations==0.4.3",
+    "einops==0.8.1",
+    "ftfy==6.3.1",
+    "llvmlite==0.44.0",
+    "networkx==3.4.2",
+    "numba==0.61.0",
+    "numpy>=1.26",
+    "pandas>=2.2",
+    "scikit-learn==1.6.1",
+    "scipy>=1.15",
+    "statsmodels==0.14.4",
+    "sympy==1.13.1",
+
+    # ── Datasets & benchmarks ─────────────────────────────────────
+    "datasets>=2.8.0",
+    "ogb==1.3.6",
+    "wilds==2.0.0",
+    "openmim==0.3.9",
+    "opendatalab==0.0.10",
+    "openxlab==0.0.11",
+
+    # ── Training / optimisation helpers ───────────────────────────
+    "deepspeed",
+    "fairscale==0.4.13",
+    "lit==18.1.8",
+    "pytorch-lightning",
+    "tensorboardX==2.6.2.2",
+    "torch-fidelity>=0.3.0",
+    "torchmetrics>=0.6.0",
+
+    # ── Visualisation ─────────────────────────────────────────────
+    "matplotlib>=3.10",
+    "plotly>=6.0.0",
+    "rich>=13.9.4",
+    "seaborn",
+    "tabulate==0.9.0",
+
+    # ── Jupyter / notebooks ───────────────────────────────────────
+    "jupyterlab==4.3.5", # pulls in jupyter-server stack
+    "ipykernel",
+    "ipywidgets==8.1.5",
+
+    # ── Web / UI / dashboards ─────────────────────────────────────
+    "gradio",            # brings FastAPI, uvicorn, httpx, websockets…
+    "dash>=2.18.2",      # meta-package bundles dash-table etc.
+    "streamlit>=0.73.1",
+
+    # ── Cloud / storage SDKs ──────────────────────────────────────
+    "boto3==1.37.11",                 # pulls botocore & s3transfer
+    "oss2==2.19.1",
+    "aliyun-python-sdk-core==2.16.0",
+    "aliyun-python-sdk-kms==2.16.5",
+
+    # ── LLM & API clients ─────────────────────────────────────────
+    "anthropic",
+    "openai==0.28.1",
+    "sentencepiece",  # optional HF models need it
+    "tiktoken",
+
+    # ── Env ─────────────────────────────────────────
+    "dotenv",
+    "gdown",
+
+]
+
+[tool.uv]
+index-strategy = "unsafe-best-match"
+no-build-isolation = true            # build all sdists in the current env
+
+[[tool.uv.index]]
+name = "pypi"
+url = "https://pypi.org/simple"
+
+[[tool.uv.index]]
+name = "pytorch-cu121"
+url = "https://download.pytorch.org/whl/cu121"
+explicit = false                               # query this index only when asked
