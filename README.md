@@ -17,14 +17,7 @@
 \*equal contribution <br><br>
 
 
-**MAIA** is a system for *automating neural model interpretability tasks* such as feature interpretation and failure mode discovery.
-It equips pre-trained **vision-language models** with tools for iterative experimentation, including:
-
-* Input synthesis and editing
-* Maximally activating exemplar discovery
-* Summarization and explanation of model subcomponents
-
-MAIA composes these tools into full interpretability experiments to describe and explain internal model behavior.
+MAIA is a system that uses neural models to automate neural model understanding tasks like feature interpretation and failure mode discovery. It equips a pre-trained vision-language model with a set of tools that support iterative experimentation on subcomponents of other models to explain their behavior. These include tools commonly used by human interpretability researchers: for synthesizing and editing inputs, computing maximally activating exemplars from real-world datasets, and summarizing and describing experimental results. Interpretability experiments proposed by MAIA compose these tools to describe and explain system behavior.
 
 This repository is under active development. Sign up for updates [here](https://forms.gle/Zs92DHbs3Y3QGjXG6).
 
