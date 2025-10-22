@@ -12,8 +12,10 @@
 ## Overview
 
 **Authors:**
-[Tamar Rott Shaham](https://tamarott.github.io/)*, [Sarah Schwettmann](https://cogconfluence.com/)*, [Franklin Wang](https://frankxwang.github.io/), [Achyuta Rajaram](https://twitter.com/AchyutaBot), [Evan Hernandez](https://evandez.com/), [Jacob Andreas](https://www.mit.edu/~jda/), [Antonio Torralba](https://groups.csail.mit.edu/vision/torralbalab/)
-*equal contribution
+[Tamar Rott Shaham](https://tamarott.github.io/)\*, [Sarah Schwettmann](https://cogconfluence.com/)\*, <br>
+[Franklin Wang](https://frankxwang.github.io/), [Achyuta Rajaram](https://twitter.com/AchyutaBot), [Evan Hernandez](https://evandez.com/), [Jacob Andreas](https://www.mit.edu/~jda/), [Antonio Torralba](https://groups.csail.mit.edu/vision/torralbalab/) <br>
+\*equal contribution <br><br>
+
 
 **MAIA** is a system for *automating neural model interpretability tasks* such as feature interpretation and failure mode discovery.
 It equips pre-trained **vision-language models** with tools for iterative experimentation, including:
