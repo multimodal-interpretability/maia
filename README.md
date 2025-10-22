@@ -1,27 +1,16 @@
 
-# A Multimodal Automated Interpretability Agent (MAIA)
+# A Multimodal Automated Interpretability Agent #
+### ICML 2024 ###
 
-### ICML 2024
-
-**[Project Page](https://multimodal-interpretability.csail.mit.edu/maia)** | **[Arxiv](https://multimodal-interpretability.csail.mit.edu/maia)** | **[Experiment Browser](https://multimodal-interpretability.csail.mit.edu/maia/experiment-browser/)**
+### [Project Page](https://multimodal-interpretability.csail.mit.edu/maia) | [Arxiv](https://multimodal-interpretability.csail.mit.edu/maia)
 
 <img align="right" width="42%" src="/docs/static/figures/maia_teaser.jpg">
 
----
-
-## Overview
-
-**Authors:**
 [Tamar Rott Shaham](https://tamarott.github.io/)\*, [Sarah Schwettmann](https://cogconfluence.com/)\*, <br>
 [Franklin Wang](https://frankxwang.github.io/), [Achyuta Rajaram](https://twitter.com/AchyutaBot), [Evan Hernandez](https://evandez.com/), [Jacob Andreas](https://www.mit.edu/~jda/), [Antonio Torralba](https://groups.csail.mit.edu/vision/torralbalab/) <br>
 \*equal contribution <br><br>
 
-
 MAIA is a system that uses neural models to automate neural model understanding tasks like feature interpretation and failure mode discovery. It equips a pre-trained vision-language model with a set of tools that support iterative experimentation on subcomponents of other models to explain their behavior. These include tools commonly used by human interpretability researchers: for synthesizing and editing inputs, computing maximally activating exemplars from real-world datasets, and summarizing and describing experimental results. Interpretability experiments proposed by MAIA compose these tools to describe and explain system behavior.
-
-This repository is under active development. Sign up for updates [here](https://forms.gle/Zs92DHbs3Y3QGjXG6).
-
----
 
 ## News
 
@@ -29,9 +18,6 @@ This repository is under active development. Sign up for updates [here](https://
 - **June 19 2025** — Released **MAIA 2.0**: free-form code execution, flexible outputs, and new backbone support (*Claude 3.5 Sonnet*, *GPT-4o*, *FLUX.1*).
 - **Aug 14 2024** — Added **synthetic neurons** support.
 - **July 3 2024** — Released **neuron labeling implementation**.
-
-
----
 
 ## Table of Contents
 - [Installation](#installation)
