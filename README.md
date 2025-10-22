@@ -1,5 +1,5 @@
 
-# 🧠 A Multimodal Automated Interpretability Agent (MAIA)
+# A Multimodal Automated Interpretability Agent (MAIA)
 
 ### ICML 2024
 
@@ -10,7 +10,7 @@
 ---
 
 ## Table of Contents
-- [🧠 A Multimodal Automated Interpretability Agent (MAIA)](#-a-multimodal-automated-interpretability-agent-maia)
+- [A Multimodal Automated Interpretability Agent (MAIA)](#-a-multimodal-automated-interpretability-agent-maia)
 - [1. Overview](#1-overview)
 - [2. News](#2-news)
 - [3. Installation](#3-installation)
@@ -35,7 +35,7 @@
 
 ---
 
-## 1. Overview
+## Overview
 
 **Authors:**
 [Tamar Rott Shaham](https://tamarott.github.io/)*, [Sarah Schwettmann](https://cogconfluence.com/)*, [Franklin Wang](https://frankxwang.github.io/), [Achyuta Rajaram](https://twitter.com/AchyutaBot), [Evan Hernandez](https://evandez.com/), [Jacob Andreas](https://www.mit.edu/~jda/), [Antonio Torralba](https://groups.csail.mit.edu/vision/torralbalab/)
@@ -50,11 +50,11 @@ It equips pre-trained **vision-language models** with tools for iterative experi
 
 MAIA composes these tools into full interpretability experiments to describe and explain internal model behavior.
 
-> 💡 This repository is under active development. Sign up for updates [here](https://forms.gle/Zs92DHbs3Y3QGjXG6).
+This repository is under active development. Sign up for updates [here](https://forms.gle/Zs92DHbs3Y3QGjXG6).
 
 ---
 
-## 2. News
+## News
 
 - **Oct 18 2025** — Added support for open-source multimodal LLM backbones. Replaced *InstructDiffusion* with *FLUX.1-Kontext-dev* for image editing.
 - **June 19 2025** — Released **MAIA 2.0**: free-form code execution, flexible outputs, and new backbone support (*Claude 3.5 Sonnet*, *GPT-4o*, *FLUX.1*).
@@ -64,9 +64,9 @@ MAIA composes these tools into full interpretability experiments to describe and
 
 ---
 
-## 3. Installation
+## Installation
 
-### A. Prerequisites
+### Prerequisites
 
 You’ll need:
 
@@ -74,7 +74,7 @@ You’ll need:
 * Conda (recommended)
 * HuggingFace + OpenAI/Anthropic API keys if using cloud models
 
-### B. Load HuggingFace Token
+### Load HuggingFace Token
 
 Required for using FLUX.1, Gemma 3, and many different models.
 
@@ -84,7 +84,7 @@ export HF_TOKEN='your-hf-token-here'
 
 Generate at [huggingface.co/settings/tokens](https://huggingface.co/settings/tokens)
 
-### C. Set API Keys
+### Set API Keys
 
 Required for using OpenAI and Anthropic models.
 
@@ -93,7 +93,7 @@ export OPENAI_API_KEY='your-openai-api-key-here'
 export ANTHROPIC_API_KEY='your-anthropic-api-key-here'
 ```
 
-### D. Client Installation
+### Cloning the repo
 
 ```bash
 git clone https://github.com/multimodal-interpretability/maia.git
@@ -102,9 +102,9 @@ bash install.sh
 bash download_exemplars.sh
 ```
 
-### E. Serving your own models (optional)
+### Serving your own models (optional)
 
-Serve open-source multimodal LLMs via [vLLM](https://docs.vllm.ai/en/latest/getting_started/installation/gpu.html#nvidia-cuda).
+To use an open-source model as the agent backbone, serve an open-source multimodal LLMs via [vLLM](https://docs.vllm.ai/en/latest/getting_started/installation/gpu.html#nvidia-cuda).
 
 ```bash
 bash server/install_server.sh
@@ -112,9 +112,9 @@ bash server/install_server.sh
 
 ---
 
-## 4. Quick Start
+## Quick Start
 
-### A. (Optional) Serve a Local Model with vLLM
+### (Optional) Serve a Local Model with vLLM (to use an open-source model as the agent backbone)
 
 Run `server/serve_model.sh` to launch a **vLLM server** on **port 11434** (the default port used by Ollama), binding to **0.0.0.0** to make it accessible on all network interfaces.
 
@@ -132,7 +132,7 @@ bash server/serve_model.sh --model Qwen/Qwen3-VL-30B-A3B-Instruct --gpus 1
 # → Runs Qwen/Qwen3-VL-30B-A3B-Instruct from the Hugging Face repository on 1 GPU.
 ```
 
-### B. Interactive Demo
+### Interactive Notebook
 
 Run interactive demo experiments using **Jupyter Notebook**.
 
@@ -143,14 +143,14 @@ jupyter notebook
 
 Open `demo.ipynb` and follow the guided workflow.
 
-> 🧩 Note: For synthetic neurons, follow the setup in `./synthetic-neurons-dataset/README.md`.
+Note: For synthetic neurons, follow the setup in `./synthetic-neurons-dataset/README.md`.
 
 ---
 
-## 5. Running MAIA (Core Usage)
+## Running MAIA
 
 
-### A. (Optional) Serve a Local Model with vLLM
+### (Optional) Serve a Local Model with vLLM (to use an open-source model as the agent backbone)
 
 Run `server/serve_model.sh` to launch a **vLLM server** on **port 11434** (the default port used by Ollama), binding to **0.0.0.0** to make it accessible on all network interfaces.
 
@@ -168,12 +168,12 @@ bash server/serve_model.sh --model Qwen/Qwen3-VL-30B-A3B-Instruct --gpus 1
 # → Runs Qwen/Qwen3-VL-30B-A3B-Instruct from the Hugging Face repository on 1 GPU.
 ```
 
-### B. Run MAIA
+### Run MAIA
 
 After installation, you can launch **MAIA** to analyze model units or layers.
 MAIA builds and runs interpretability experiments using your chosen **agent backbone**, **target model**, and **GPU**.
 
-#### 🔹 Basic usage
+#### Basic usage
 
 ```bash
 python main.py \
@@ -197,7 +197,7 @@ python main.py \
 
 ---
 
-#### 🔹 Examples
+#### Examples
 
 **1. Manual selection**
 
@@ -226,15 +226,15 @@ python main.py --agent local-google/gemma-3-27b-it \
 
 ---
 
-> ⚙️ **System requirements:**
+> **System requirements:**
 > MAIA’s agent tools require a **GPU with at least 24 GB VRAM** (e.g., an **RTX 3090**) and **at least 48 GB of system RAM** for stable multimodal inference and image-editing tasks.
 ---
 
-> 🗂️ **Results** are saved as HTML files in the `./results/` directory.
+> **Results** are saved as HTML files in the `./results/` directory.
 
 ---
 
-### C. Large-Scale Experiments (Multi-GPU)
+### Large-Scale Experiments (Multi-GPU)
 
 You can run large experiments in parallel across multiple GPUs **without any distributed setup**.
 Use `--total_chunks` and `--chunk_id` to split your list of layers/units into parts — each process handles one part independently.
@@ -255,20 +255,20 @@ python main.py --agent gpt-4o --model resnet152 \
 
 Each run processes a different subset of units and saves results separately in `./results/`.
 
-> 💡 No special distributed setup required — just launch one process per GPU.
+> No special distributed setup required — just launch one process per GPU.
 > Re-run any failed chunk by reusing its same `--chunk_id`.
 
 ---
 
-## 6. Synthetic Neurons
+## Synthetic Neurons
 
-### A. Run MAIA on Synthetic Neurons
+### Run MAIA on Synthetic Neurons
 
 ```bash
 python main.py --model synthetic_neurons --unit_mode manual --units mono=1,8:or=9:and=0,2,5
 ```
 
-### B. Create Custom Synthetic Neurons
+### Create Custom Synthetic Neurons
 
 1. Choose mode & label(s) (e.g. `"Cheese OR Lemon"`)
 2. Collect images for each concept (e.g. from COCO)
@@ -279,7 +279,7 @@ python main.py --model synthetic_neurons --unit_mode manual --units mono=1,8:or=
 
 ---
 
-## 7. Using NetDissect
+## Using NetDissect
 
 To analyze a *new model*:
 
@@ -301,9 +301,9 @@ To analyze a *new model*:
 
 ---
 
-## 8. Evaluation
+## Evaluation
 
-Use the evaluation scripts to score neuron labels and compare backbone performance.
+Use the evaluation scripts to score neuron labels and compare backbone performance. Please note- this is a slightly different evaluation function than used in the original paper. The reproducibility of paper results is therefore not guaranteed. 
 
 **Single-GPU example:**
 
@@ -347,8 +347,9 @@ Edit `FAMILIES` in `plots.py` to point to your result directories.
 
 ---
 
-## 9. Acknowledgments
+## Acknowledgments
 
+* [Josep Lopez](https://yusepp.github.io/) added compatibility with open-source multimodal LLMs as agents.
 * [Christy Li](https://christykl.github.io/) and [Jake Touchet](https://www.linkedin.com/in/jake-touchet-557329297/) contributed to MAIA 2.0 release.
 * [Christy Li](https://christykl.github.io/) also cleaned up synthetic neurons code for release.
-* [Josep Lopez](https://yusepp.github.io/) added compatibility with open-source multimodal LLMs as agents.
+
