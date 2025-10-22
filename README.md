@@ -9,32 +9,6 @@
 
 ---
 
-## Table of Contents
-- [A Multimodal Automated Interpretability Agent (MAIA)](#-a-multimodal-automated-interpretability-agent-maia)
-- [1. Overview](#1-overview)
-- [2. News](#2-news)
-- [3. Installation](#3-installation)
-  - [A. Prerequisites](#a-prerequisites)
-  - [B. Load HuggingFace Token](#b-load-huggingface-token)
-  - [C. Set API Keys](#c-set-api-keys)
-  - [D. Client Installation](#d-client-installation)
-  - [E. Serving your own models (optional)](#e-serving-your-own-models-optional)
-- [4. Quick Start](#4-quick-start)
-  - [A. (Optional) Serve a Local Model with vLLM](#a-optional-serve-a-local-model-with-vllm)
-  - [B. Interactive Demo](#b-interactive-demo)
-- [5. Running MAIA (Core Usage)](#5-running-maia-core-usage)
-  - [A. (Optional) Serve a Local Model with vLLM](#a-optional-serve-a-local-model-with-vllm-1)
-  - [B. Run MAIA](#b-run-maia)
-  - [C. Large-Scale Experiments (Multi-GPU)](#c-large-scale-experiments-multi-gpu)
-- [6. Synthetic Neurons](#6-synthetic-neurons)
-  - [A. Run MAIA on Synthetic Neurons](#a-run-maia-on-synthetic-neurons)
-  - [B. Create Custom Synthetic Neurons](#b-create-custom-synthetic-neurons)
-- [7. Using NetDissect](#7-using-netdissect)
-- [8. Evaluation](#8-evaluation)
-- [9. Acknowledgments](#9-acknowledgments)
-
----
-
 ## Overview
 
 **Authors:**
@@ -61,6 +35,17 @@ This repository is under active development. Sign up for updates [here](https://
 - **Aug 14 2024** — Added **synthetic neurons** support.
 - **July 3 2024** — Released **neuron labeling implementation**.
 
+
+---
+
+## Table of Contents
+- [Installation](#installation)
+- [Quick Start](#quick-start)
+- [Running MAIA (Core Usage)](#running-maia-core-usage)
+- [Synthetic Neurons](#synthetic-neurons)
+- [Using NetDissect](using-netdissect)
+- [Evaluation](evaluation)
+- [Acknowledgments](acknowledgments)
 
 ---
 
