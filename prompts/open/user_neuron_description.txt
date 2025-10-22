@@ -1,0 +1,58 @@
+Your overall task is to describe the visual concepts that maximally activate a neuron inside a deep network for computer vision. You are provided with a Python library containing functions to run experiments on a specific neuron (located inside the "System" class) using tools provided in the "Tools" class. Make sure to utilize a variety of tools from the library to maximize the scope and depth of your experimentation. Neurons may be selective for specific visual concepts, multiple unrelated concepts, or broader, general concepts. Therefore, creatively design experiments to test both general and highly specific hypotheses. If a neuron shows selectivity for multiple concepts, ensure that each of these is clearly described in your final report.
+To characterize the neuron's visual selectivity clearly, actively utilize all available functions (dataset_exemplars, edit_images, text2image, summarize_images, describe_images, display) from the Tools class throughout your experiments.
+
+Follow this structured approach strictly:
+
+1. At each experimental step, you must write only one experiment implementation using Python code in the following format:
+
+[CODE]:
+```python
+# e.g:
+# Write exactly one experiment implementation using Python, the System class, and Tools class.
+# Obtain preliminar results from dataset_exemplars
+# Display values and images explicitly using tools.display() if you wish to view them.
+```
+2. After the code execution, wait for the results before proceeding further.
+
+3. Based on the displayed neuron activations, first summarize common features in inputs that highly activate the neuron. Do this independently of previous hypotheses.
+
+4. Then write multiple hypotheses explaining potential visual concepts activating the neuron. Hypotheses should:
+  - Include multiple possibilities if necessary (e.g., dogs OR cars OR birds).
+  - Explore different abstraction levels or alternative explanations.
+  - Be specific and general to cover all possibilities.
+
+5. Format your hypotheses clearly:
+
+[HYPOTHESIS LIST]:
+Hypothesis_1: <hypothesis_1>
+...
+Hypothesis_n: <hypothesis_n>
+
+6. After analyzing the results of the executed experiment, revise your hypothesis list accordingly, but only if new activations are different than previous ones.
+
+7. Next, propose additional experiments to test all current hypotheses thoroughly, again using only one experiment at a time, clearly formatted as above.
+
+Proceed in a step-by-step manner, strictly adhering to this flow:
+
+MAIA: Propose one clearly defined experiment ([CODE]).
+Experiment Execution: Await and carefully analyze the results.
+MAIA: Update your hypothesis list ([HYPOTHESIS LIST]) based on analysis.
+Experiment Execution: Continue iteratively.
+
+Repeat these cycles until each hypothesis is conclusively proven or disproven through multiple experiments.
+When fully confident in the neuron's selectivity, provide a final comprehensive and specific description:
+
+[DESCRIPTION]: <final detailed description>
+
+The description must be:
+
+Highly specific (e.g., "dogs running on grass", not merely "dog").
+Complete, covering all relevant selective concepts.
+Clearly indicate multiple concepts separated by logical "OR" if applicable.
+
+Finally, summarize your findings concisely into one or more (only if needed) labels derived from the hypotheses you're most confident about:
+
+[LABEL 1]: <label describing first confirmed concept>
+[LABEL 2]: <label describing second confirmed concept>  (if applicable)
+
+Now, begin your first experiment clearly and wait for results:

@@ -1,253 +1,354 @@
-# A Multimodal Automated Interpretability Agent #
-### ICML 2024 ###
 
-### [Project Page](https://multimodal-interpretability.csail.mit.edu/maia) | [Arxiv](https://multimodal-interpretability.csail.mit.edu/maia) | [Experiment browser](https://multimodal-interpretability.csail.mit.edu/maia/experiment-browser/)
+# 🧠 A Multimodal Automated Interpretability Agent (MAIA)
+
+### ICML 2024
+
+**[Project Page](https://multimodal-interpretability.csail.mit.edu/maia)** | **[Arxiv](https://multimodal-interpretability.csail.mit.edu/maia)** | **[Experiment Browser](https://multimodal-interpretability.csail.mit.edu/maia/experiment-browser/)**
 
 <img align="right" width="42%" src="/docs/static/figures/maia_teaser.jpg">
 
-[Tamar Rott Shaham](https://tamarott.github.io/)\*, [Sarah Schwettmann](https://cogconfluence.com/)\*, <br>
-[Franklin Wang](https://frankxwang.github.io/), [Achyuta Rajaram](https://twitter.com/AchyutaBot), [Evan Hernandez](https://evandez.com/), [Jacob Andreas](https://www.mit.edu/~jda/), [Antonio Torralba](https://groups.csail.mit.edu/vision/torralbalab/) <br>
-\*equal contribution <br><br>
+---
 
-MAIA is a system that uses neural models to automate neural model understanding tasks like feature interpretation and failure mode discovery. It equips a pre-trained vision-language model with a set of tools that support iterative experimentation on subcomponents of other models to explain their behavior. These include tools commonly used by human interpretability researchers: for synthesizing and editing inputs, computing maximally activating exemplars from real-world datasets, and summarizing and describing experimental results. Interpretability experiments proposed by MAIA compose these tools to describe and explain system behavior.
+## Table of Contents
+- [🧠 A Multimodal Automated Interpretability Agent (MAIA)](#-a-multimodal-automated-interpretability-agent-maia)
+- [1. Overview](#1-overview)
+- [2. News](#2-news)
+- [3. Installation](#3-installation)
+  - [A. Prerequisites](#a-prerequisites)
+  - [B. Load HuggingFace Token](#b-load-huggingface-token)
+  - [C. Set API Keys](#c-set-api-keys)
+  - [D. Client Installation](#d-client-installation)
+  - [E. Serving your own models (optional)](#e-serving-your-own-models-optional)
+- [4. Quick Start](#4-quick-start)
+  - [A. (Optional) Serve a Local Model with vLLM](#a-optional-serve-a-local-model-with-vllm)
+  - [B. Interactive Demo](#b-interactive-demo)
+- [5. Running MAIA (Core Usage)](#5-running-maia-core-usage)
+  - [A. (Optional) Serve a Local Model with vLLM](#a-optional-serve-a-local-model-with-vllm-1)
+  - [B. Run MAIA](#b-run-maia)
+  - [C. Large-Scale Experiments (Multi-GPU)](#c-large-scale-experiments-multi-gpu)
+- [6. Synthetic Neurons](#6-synthetic-neurons)
+  - [A. Run MAIA on Synthetic Neurons](#a-run-maia-on-synthetic-neurons)
+  - [B. Create Custom Synthetic Neurons](#b-create-custom-synthetic-neurons)
+- [7. Using NetDissect](#7-using-netdissect)
+- [8. Evaluation](#8-evaluation)
+- [9. Acknowledgments](#9-acknowledgments)
 
-**News** 
-\
-[June 19 2025]: Releasing MAIA 2.0: MAIA's code execution now runs free-form blocks of code, and it calls a flexible display tool to show the results in the experiment log. Additionally, added support for Claude 3.5 Sonnet, GPT-4o, and GPT-4 Turbo as backbones for MAIA backbone, Flux for image generation, and InstructDiffusion for image editing. 
-\
-[August 14 2024]: Synthetic neurons are now available (both in `demo.ipynb` and in `main.py`)
-\
-[July 3 2024]: We release MAIA implementation code for neuron labeling 
+---
 
-**This repo is under active development. Sign up for updates by email using [this google form](https://forms.gle/Zs92DHbs3Y3QGjXG6).**
+## 1. Overview
+
+**Authors:**
+[Tamar Rott Shaham](https://tamarott.github.io/)*, [Sarah Schwettmann](https://cogconfluence.com/)*, [Franklin Wang](https://frankxwang.github.io/), [Achyuta Rajaram](https://twitter.com/AchyutaBot), [Evan Hernandez](https://evandez.com/), [Jacob Andreas](https://www.mit.edu/~jda/), [Antonio Torralba](https://groups.csail.mit.edu/vision/torralbalab/)
+*equal contribution
+
+**MAIA** is a system for *automating neural model interpretability tasks* such as feature interpretation and failure mode discovery.
+It equips pre-trained **vision-language models** with tools for iterative experimentation, including:
+
+* Input synthesis and editing
+* Maximally activating exemplar discovery
+* Summarization and explanation of model subcomponents
+
+MAIA composes these tools into full interpretability experiments to describe and explain internal model behavior.
+
+> 💡 This repository is under active development. Sign up for updates [here](https://forms.gle/Zs92DHbs3Y3QGjXG6).
+
+---
+
+## 2. News
+
+- **Oct 18 2025** — Added support for open-source multimodal LLM backbones. Replaced *InstructDiffusion* with *FLUX.1-Kontext-dev* for image editing.
+- **June 19 2025** — Released **MAIA 2.0**: free-form code execution, flexible outputs, and new backbone support (*Claude 3.5 Sonnet*, *GPT-4o*, *FLUX.1*).
+- **Aug 14 2024** — Added **synthetic neurons** support.
+- **July 3 2024** — Released **neuron labeling implementation**.
 
 
-### Installations ###
-clone this repo and create a conda environment:
+---
+
+## 3. Installation
+
+### A. Prerequisites
+
+You’ll need:
+
+* Python ≥3.10 (recommended)
+* Conda (recommended)
+* HuggingFace + OpenAI/Anthropic API keys if using cloud models
+
+### B. Load HuggingFace Token
+
+Required for using FLUX.1, Gemma 3, and many different models.
+
 ```bash
-git clone https://github.com/multimodal-interpretability/maia.git
-cd maia
-conda create -n maia python=3.10 --file conda_packages.txt -c nvidia
-conda activate maia
+export HF_TOKEN='your-hf-token-here'
 ```
 
-install packages and dependencies
-```bash
-pip install -r torch_requirements.txt
-pip install -r requirements.txt
-pip install -r torch_requirements.txt --force-reinstall
-pip install git+https://github.com/huggingface/transformers.git
-```
+Generate at [huggingface.co/settings/tokens](https://huggingface.co/settings/tokens)
 
-install InstructDiffusion and Flux
-```bash
-cd utils
-git clone https://github.com/cientgu/InstructDiffusion.git
-pip install -r requirements_instdiff_flux.txt
-cd InstructDiffusion
-bash scripts/download_pretrained_instructdiffusion.sh
-cd ../../
-```
+### C. Set API Keys
 
-download [net-dissect](https://netdissect.csail.mit.edu/) precomputed exemplars:
-```bash
-bash download_exemplars.sh
-```
+Required for using OpenAI and Anthropic models.
 
-### Quick Start ###
-You can run demo experiments on individual units using ```demo.ipynb```:
-\
-\
-Install Jupyter Notebook via pip (if Jupyter is already installed, continue to the next step)
-```bash
-pip install notebook
-```
-Launch Jupyter Notebook
-```bash
-jupyter notebook
-```
-This command will start the Jupyter Notebook server and open the Jupyter Notebook interface in your default web browser. The interface will show all the notebooks, files, and subdirectories in this repo (assuming is was initiated from the maia path). Open ```demo.ipynb``` and proceed according to the instructions.
-
-NEW: `demo.ipynb` now supports synthetic neurons. Follow installation instructions at `./synthetic-neurons-dataset/README.md`. After installation is done, you can define MAIA to run on synthetic neurons according to the instructions in `demo.ipynb`.
-
-### Batch experimentation ###
-To run a batch of experiments, use ```main.py```:
-
-#### Load OpenAI or Anthropic API key ####
-(you can get an OpenAI API key by following the instructions [here](https://platform.openai.com/docs/quickstart) and an Anthropic API key by following the instructions [here](https://docs.anthropic.com/en/docs/get-started)).
-
-Set your API key as an environment variable
 ```bash
 export OPENAI_API_KEY='your-openai-api-key-here'
 export ANTHROPIC_API_KEY='your-anthropic-api-key-here'
 ```
 
-#### Load Huggingface key ####
-You will need a Huggingface API key if you want to use Stable Diffusion 3.5 as the text2image model (you can get a HuggingFace API key by following the instructions [here](https://huggingface.co/stabilityai/stable-diffusion-3.5-medium)).
+### D. Client Installation
 
-Set your API key as an environment variable
 ```bash
-export HF_TOKEN='your-hf-token-here'
+git clone https://github.com/multimodal-interpretability/maia.git
+cd maia
+bash install.sh
+bash download_exemplars.sh
 ```
 
-#### Run MAIA ####
-Manually specify the model and desired units in the format ```layer#1=unit#1,unit#2... : layer#1=unit#1,unit#2...``` by calling e.g.:
+### E. Serving your own models (optional)
+
+Serve open-source multimodal LLMs via [vLLM](https://docs.vllm.ai/en/latest/getting_started/installation/gpu.html#nvidia-cuda).
+
 ```bash
-python main.py --model resnet152 --unit_mode manual --units layer3=229,288:layer4=122,210
-``` 
-OR by loading a ```.json``` file specifying the units (see example in ```./neuron_indices/```)
-```bash
-python main.py --model resnet152 --unit_mode from_file --unit_file_path ./neuron_indices/
+bash server/install_server.sh
 ```
-Adding ```--debug``` to the call will print all results to the screen.
-Refer to the documentation of ```main.py``` for more configuration options.
 
-Results are automatically saved to an html file under ```./results/``` and can be viewed in your browser by starting a local server:
+---
+
+## 4. Quick Start
+
+### A. (Optional) Serve a Local Model with vLLM
+
+Run `server/serve_model.sh` to launch a **vLLM server** on **port 11434** (the default port used by Ollama), binding to **0.0.0.0** to make it accessible on all network interfaces.
+
 ```bash
-python -m http.server 80
+bash server/serve_model.sh --model <model-name-or-repository> --gpus <number_of_gpus>
+
+# Examples:
+bash server/serve_model.sh --model mistral --gpus 4
+# → Runs Mistral Small 3.2 (24B) on 4 GPUs.
+
+bash server/serve_model.sh --model gemma --gpus 4
+# → Runs Gemma 3 (27B) on 4 GPUs.
+
+bash server/serve_model.sh --model Qwen/Qwen3-VL-30B-A3B-Instruct --gpus 1
+# → Runs Qwen/Qwen3-VL-30B-A3B-Instruct from the Hugging Face repository on 1 GPU.
 ```
-Once the server is up, open the html in [http://localhost:80](http://localhost:80/results/)
 
-#### Run MAIA on sythetic neurons ####
+### B. Interactive Demo
 
-You can now run maia on synthetic neurons with ground-truth labels (see sec. 4.2 in the paper for more details).
+Run interactive demo experiments using **Jupyter Notebook**.
 
-Follow installation instructions at `./synthetic-neurons-dataset/README.md`. Then you should be able to run `main.py` on synthetic neurons by calling e.g.:
+```bash
+pip install notebook
+jupyter notebook
+```
+
+Open `demo.ipynb` and follow the guided workflow.
+
+> 🧩 Note: For synthetic neurons, follow the setup in `./synthetic-neurons-dataset/README.md`.
+
+---
+
+## 5. Running MAIA (Core Usage)
+
+
+### A. (Optional) Serve a Local Model with vLLM
+
+Run `server/serve_model.sh` to launch a **vLLM server** on **port 11434** (the default port used by Ollama), binding to **0.0.0.0** to make it accessible on all network interfaces.
+
+```bash
+bash server/serve_model.sh --model <model-name-or-repository> --gpus <number_of_gpus>
+
+# Examples:
+bash server/serve_model.sh --model mistral --gpus 4
+# → Runs Mistral Small 3.2 (24B) on 4 GPUs.
+
+bash server/serve_model.sh --model gemma --gpus 4
+# → Runs Gemma 3 (27B) on 4 GPUs.
+
+bash server/serve_model.sh --model Qwen/Qwen3-VL-30B-A3B-Instruct --gpus 1
+# → Runs Qwen/Qwen3-VL-30B-A3B-Instruct from the Hugging Face repository on 1 GPU.
+```
+
+### B. Run MAIA
+
+After installation, you can launch **MAIA** to analyze model units or layers.
+MAIA builds and runs interpretability experiments using your chosen **agent backbone**, **target model**, and **GPU**.
+
+#### 🔹 Basic usage
+
+```bash
+python main.py \
+  --agent <agent_backbone> \
+  --model <model_name> \
+  --device <gpu_id> \
+  --unit_mode <mode> \
+  --units <layer_and_neuron_spec>
+```
+
+**Key arguments**
+
+| Argument      | Description                                                                                                                                                                                                   |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--agent`      | **Agent backbone** for reasoning and interpretation. Options:<br>• `claude` *(default)*<br>• `gpt-4o`<br>• `local-<local_served_model_name>` (for models served via vLLM, e.g. `local-google/gemma-3-27b-it`) |
+| `--base_url`  | *(Local models only)* URL where the vLLM model is served. Example: `http://localhost:11434/v1`                                                                                                                |
+| `--model`     | Neural network to analyze (e.g., `resnet152`, `synthetic_neurons`).                                                                                                                                           |
+| `--device`    | GPU ID for running MAIA’s agent tools (e.g., `0` or `1`).                                                                                                                                                     |
+| `--unit_mode` | How neurons are selected:<br>• `manual`: specify indices directly<br>• `from_file`: load from JSON file                                                                                                       |
+| `--units`     | Layers and neuron indices to analyze (manual mode). Example:<br>`layer3=229,288:layer4=122,210` → neurons 229, 288 in layer 3 and 122, 210 in layer 4.                                                        |
+
+---
+
+#### 🔹 Examples
+
+**1. Manual selection**
+
+```bash
+python main.py --agent gpt-4o --model resnet152 --device 0 \
+  --unit_mode manual --units layer3=229,288:layer4=122,210
+```
+
+**2. From JSON file**
+
+```bash
+python main.py --agent claude --model resnet152 --device 0 \
+  --unit_mode from_file --unit_file_path ./neuron_indices/
+```
+
+> Each JSON file in `./neuron_indices/` defines which layers and neurons to examine for a given model.
+
+**3. Using a locally served model (via vLLM)**
+
+```bash
+python main.py --agent local-google/gemma-3-27b-it \
+  --base_url http://localhost:11434/v1 \
+  --model resnet152 --device 0 \
+  --unit_mode manual --units layer3=229,288:layer4=122,210
+```
+
+---
+
+> ⚙️ **System requirements:**
+> MAIA’s agent tools require a **GPU with at least 24 GB VRAM** (e.g., an **RTX 3090**) and **at least 48 GB of system RAM** for stable multimodal inference and image-editing tasks.
+---
+
+> 🗂️ **Results** are saved as HTML files in the `./results/` directory.
+
+---
+
+### C. Large-Scale Experiments (Multi-GPU)
+
+You can run large experiments in parallel across multiple GPUs **without any distributed setup**.
+Use `--total_chunks` and `--chunk_id` to split your list of layers/units into parts — each process handles one part independently.
+
+**Example: split across 4 GPUs**
+
+```bash
+# GPU 0
+python main.py --agent gpt-4o --model resnet152 \
+  --unit_mode from_file --unit_file_path ./neuron_indices/resnet152.json \
+  --chunk_id 1 --total_chunks 2 --device 0 &
+
+# GPU 1
+python main.py --agent gpt-4o --model resnet152 \
+  --unit_mode from_file --unit_file_path ./neuron_indices/resnet152.json \
+  --chunk_id 2 --total_chunks 2 --device 1 &
+```
+
+Each run processes a different subset of units and saves results separately in `./results/`.
+
+> 💡 No special distributed setup required — just launch one process per GPU.
+> Re-run any failed chunk by reusing its same `--chunk_id`.
+
+---
+
+## 6. Synthetic Neurons
+
+### A. Run MAIA on Synthetic Neurons
+
 ```bash
 python main.py --model synthetic_neurons --unit_mode manual --units mono=1,8:or=9:and=0,2,5
-``` 
-(neuron indices are specified according to the neuron type: "mono", "or" and "and").
-
-You can also use the .json file to run all synthetic neurons (or specify your own file):
-```bash
-python main.py --model synthetic_neurons --unit_mode from_file --unit_file_path ./neuron_indices/
 ```
 
-### Running netdissect
+### B. Create Custom Synthetic Neurons
 
-MAIA uses pre-computed exemplars for its experiments. Thus, to run MAIA on a new model, you must first compute the exemplars netdissect. MAIA was built to use exemplar data as generated by MILAN’s implementation of netdissect. 
+1. Choose mode & label(s) (e.g. `"Cheese OR Lemon"`)
+2. Collect images for each concept (e.g. from COCO)
+3. Compute activations via `SAMNeuron`
+4. Save top images by activation in folder structure:
+   `path2data/label` or `path2data/label1_label2`
+5. Convert to MAIA format ([example notebook](synthetic-neurons-dataset/create_synthetic_neurons.ipynb))
 
-First, clone MILAN.
+---
 
-```python
-git clone https://github.com/evandez/neuron-descriptions.git
-```
+## 7. Using NetDissect
 
-Then, set the environment variables to control where the data is inputted/outputted. Ex:
+To analyze a *new model*:
 
-```python
-%env MILAN_DATA_DIR=./data
-%env MILAN_MODELS_DIR=./models
-%env MILAN_RESULTS_DIR=./results
-```
+1. Clone [MILAN repo](https://github.com/evandez/neuron-descriptions)
+2. Set environment paths:
 
-Make those three directories mentioned above.
+   ```bash
+   export MILAN_DATA_DIR=./data
+   export MILAN_MODELS_DIR=./models
+   export MILAN_RESULTS_DIR=./results
+   ```
+3. Add your model config to `src/exemplars/models.py`
+4. Run exemplar computation:
 
-When you have a new model you want to dissect:
+   ```bash
+   python3 -m scripts.compute_exemplars resnet18syn imagenet --device cuda
+   ```
+5. Move computed exemplars to `./exemplars/`
 
-1. Make a folder in `models` directory
-2. Name it whatever you want to call your model (in this case we'll use `resnet18syn`)
-3. Inside that folder, place your saved model file, but name it `imagenet.pth` (since you'll be dissecting with ImageNet)
+---
 
-Now, place ImageNet in the data directory. If you have imagenet installed, you create a symbolic link to it using:
+## 8. Evaluation
 
-```bash
-ln -s /path/to/imagenet /path/to/data/imagenet
-```
+Use the evaluation scripts to score neuron labels and compare backbone performance.
 
-If you don’t have imagenet installed, follow the download instructions [here](https://image-net.org/download.php): 
-
-Next, add under your keys in `models.py` (located in `src/exemplars/models.py`):
-
-```python
-KEYS.RESNET18_SYNTHETIC = 'resnet18syn/imagenet'
-```
-
-Then add this in the keys dict:
-
-```python
-KEYS.RESNET18_SYNTHETIC:
-    ModelConfig(
-        models.resnet18,
-        load_weights=True,
-        layers=LAYERS.RESNET18,
-    ),
-```
-
-Once that's done, you should be ready to run the compute exemplars script:
+**Single-GPU example:**
 
 ```bash
-python3 -m scripts.compute_exemplars resnet18syn imagenet --device cuda
+python evaluation/eval.py \
+  --agent <agent_name> \
+  --labels <path_to_labels> \
+  --n <num_prompts> \
+  --device cuda:0
 ```
 
-This will run the compute exemplars script using the ResNet18 synthetic model on the ImageNet dataset, utilizing CUDA for GPU acceleration.
+For a single GPU, omit `--chunk_id` and `--total_chunks`.
 
-Finally, move the computed exemplars to the `exemplars/` folder.
+**Multi-GPU example:**
 
-### To set up the synthetic neurons:
+```bash
+# GPU 0
+python evaluation/eval.py \
+  --agent <agent_name> \
+  --labels <path_to_labels> \
+  --n <num_prompts> \
+  --chunk_id 1 --total_chunks 2 --device cuda:0 &
 
-1. **init Grounded-SAM submodule**  
-  ```
-  git submodule init
-  git submodule update
-  ```
+# GPU 1
+python evaluation/eval.py \
+  --agent <agent_name> \
+  --labels <path_to_labels> \
+  --n <num_prompts> \
+  --chunk_id 2 --total_chunks 2 --device cuda:1 &
+```
 
-2. **Follow the setup instructions on Grounded SAM setup:**
-   - Export global variables (choose whether to run on CPU or GPU; note that running on CPU is feasible but slower, approximately 3 seconds per image):
+Each process handles a different subset of labels — no special distributed setup required; just run one process per GPU.
 
-     ```bash
-     export AM_I_DOCKER="False"
-     export BUILD_WITH_CUDA="True"
-     export CUDA_HOME=$(dirname "$(dirname "$(which nvcc)")")
-     export CC=$(which gcc-12)
-     export CXX=$(which g++-12)
-     ```
-   - Install Segment Anything:
-     ```bash
-     pip install git+https://github.com/facebookresearch/segment-anything.git
-     ```
-   - Install Grounding Dino:
-     ```bash
-     pip install git+https://github.com/IDEA-Research/GroundingDINO.git
-     ```
-     
-3. **Download Grounding DINO and Grounded SAM .pth files**  
-   - Download Grounding DINO: 
-     ```bash
-     wget "https://github.com/IDEA-Research/GroundingDINO/releases/download/v0.1.0-alpha/groundingdino_swint_ogc.pth"
-     ```
-   - Download Grounded SAM: 
-     ```bash
-     wget https://dl.fbaipublicfiles.com/segment_anything/sam_vit_h_4b8939.pth
-     ```
-    - Try running Grounded SAM demo:
-      ```bash
-      export CUDA_VISIBLE_DEVICES=0
-      python grounded_sam_demo.py \
-        --config GroundingDINO/groundingdino/config/GroundingDINO_SwinT_OGC.py \
-        --grounded_checkpoint groundingdino_swint_ogc.pth \
-        --sam_checkpoint sam_vit_h_4b8939.pth \
-        --input_image assets/demo1.jpg \
-        --output_dir "outputs" \
-        --box_threshold 0.3 \
-        --text_threshold 0.25 \
-        --text_prompt "bear" \
-        --device "cpu"
-      ```
+**Generate plots:**
 
-#### Creating Custom Synthetic-Neurons
+```bash
+python evaluation/plots.py
+```
 
-1. Decide the mode and label(s) for your neuron.
-    1. ex. Cheese OR Lemon
-2. Identify an object-classification dataset you want to create exemplars from. The example notebooks use COCO.
-3. Query the dataset for relevant images to your synthetic neuron
-    1. i.e. if you want to build a neuron that’s selective for dogs (monosemantic neuron), query the dataset for dog images
-    2. If you want to build a neuron that’s selective for dogs but only if they’re wearing collars (and neuron), query the dataset for dogs wearing collars
-4. Instantiate synthetic neuron with desired setting and labels
-5. Run SAMNeuron on all candidate images and save the top 15 highest activating images and their activations
-6. Save the data in the format “path2data/label” or for multi-label neurons “path2data/label1_label2”
-7. Convert the saved data to the format expected by MAIA, demonstrated [here](synthetic-neurons-dataset/create_synthetic_neurons.ipynb)
+Edit `FAMILIES` in `plots.py` to point to your result directories.
 
-### Acknowledgment ###
-[Christy Li](https://christykl.github.io/) and [Jake Touchet](https://www.linkedin.com/in/jake-touchet-557329297/) contributed to MAIA 2.0 release.
-[Christy Li](https://christykl.github.io/) helped with cleaning up the synthetic neurons code for release.
+---
+
+## 9. Acknowledgments
+
+* [Christy Li](https://christykl.github.io/) and [Jake Touchet](https://www.linkedin.com/in/jake-touchet-557329297/) contributed to MAIA 2.0 release.
+* [Christy Li](https://christykl.github.io/) also cleaned up synthetic neurons code for release.
+* [Josep Lopez](https://yusepp.github.io/) added compatibility with open-source multimodal LLMs as agents.

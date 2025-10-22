@@ -1,0 +1,21 @@
+name: maia
+channels:
+        - nvidia/label/cuda-12.4
+        - pytorch
+        - conda-forge
+        - defaults
+channel_priority: strict
+dependencies:
+        # core
+        - python=3.11
+        - cuda=12.4 # meta-package pulls in all cuda-*
+        - cuda-toolkit=12.4.1
+        # GNU compilers
+        - gcc_linux-64=12
+        - gxx_linux-64=12
+        # optional build helpers
+        - cmake
+        - ninja
+        - dlib
+        - pip:
+                  - uv
